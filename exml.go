@@ -9,12 +9,14 @@ import (
 )
 
 type Handler func(Attrs, CharData)
+type ErrorHandler func(error)
 
 type Decoder struct {
-	decoder  *xml.Decoder
-	handlers map[string]Handler
-	events   []string
-	text     *bytes.Buffer
+	decoder      *xml.Decoder
+	handlers     map[string]Handler
+	errorHandler ErrorHandler
+	events       []string
+	text         *bytes.Buffer
 }
 
 func NewDecoder(r io.Reader) *Decoder {
@@ -31,10 +33,17 @@ func (d *Decoder) On(event string, handler Handler) {
 	d.handlers[fullEvent] = handler
 }
 
+func (d *Decoder) OnError(handler ErrorHandler) {
+	d.errorHandler = handler
+}
+
 func (d *Decoder) Run() {
 	for {
-		token, _ := d.decoder.Token()
+		token, err := d.decoder.Token()
 		if token == nil {
+			if d.errorHandler != nil {
+				d.errorHandler(err)
+			}
 			break
 		}
 

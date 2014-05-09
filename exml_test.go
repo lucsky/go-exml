@@ -3,6 +3,7 @@ package exml
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"gopkg.in/check.v1"
@@ -301,4 +302,18 @@ func runTextTest3(c *check.C, testFile string, expectedFmt string) {
 	c.Assert(handlerWasCalled[0], check.Equals, true)
 	c.Assert(handlerWasCalled[1], check.Equals, true)
 	c.Assert(handlerWasCalled[2], check.Equals, true)
+}
+
+func (s *EXMLSuite) Test_Error(c *check.C) {
+	reader := strings.NewReader("<?xml version=\"1.0\"?><root></node>")
+	decoder := NewDecoder(reader)
+	handlerWasCalled := false
+
+	decoder.OnError(func(err error) {
+		handlerWasCalled = true
+	})
+
+	decoder.Run()
+
+	c.Assert(handlerWasCalled, check.Equals, true)
 }
