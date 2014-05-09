@@ -287,6 +287,40 @@ func runTextTest3(c *check.C, data string, expectedFmt string) {
 	c.Assert(handlerWasCalled[2], check.Equals, true)
 }
 
+const ASSIGN = `<?xml version="1.0"?>
+<root>
+    <node>Text content</node>
+</root>`
+
+func (s *EXMLSuite) Test_Assign(c *check.C) {
+	var text string
+
+	decoder := NewDecoder(strings.NewReader(ASSIGN))
+	decoder.On("root/node/$text", decoder.Assign(&text))
+	decoder.Run()
+
+	c.Assert(text, check.Equals, "Text content")
+}
+
+const APPEND = `<?xml version="1.0"?>
+<root>
+    <node>Text content 1</node>
+    <node>Text content 2</node>
+    <node>Text content 3</node>
+</root>`
+
+func (s *EXMLSuite) Test_Append(c *check.C) {
+	texts := []string{}
+
+	decoder := NewDecoder(strings.NewReader(APPEND))
+	decoder.On("root/node/$text", decoder.Append(&texts))
+	decoder.Run()
+
+	c.Assert(texts[0], check.Equals, "Text content 1")
+	c.Assert(texts[1], check.Equals, "Text content 2")
+	c.Assert(texts[2], check.Equals, "Text content 3")
+}
+
 const MALFORMED = "<?xml version=\"1.0\"?><root></node>"
 
 func (s *EXMLSuite) Test_Error(c *check.C) {

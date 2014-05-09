@@ -77,6 +77,18 @@ func (d *Decoder) Run() {
 	}
 }
 
+func (d *Decoder) Assign(slot *string) func(CharData) {
+	return func(c CharData) {
+		*slot = string(c)
+	}
+}
+
+func (d *Decoder) Append(a *[]string) func(CharData) {
+	return func(c CharData) {
+		*a = append(*a, string(c))
+	}
+}
+
 func (d *Decoder) getHandler() Handler {
 	fullEvent := strings.Join(d.events, "/")
 	return d.handlers[fullEvent]
