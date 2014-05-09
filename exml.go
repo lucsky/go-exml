@@ -8,7 +8,9 @@ import (
 	"strings"
 )
 
-type Handler func(Attrs, CharData)
+type Handler interface{}
+type ElemHandler func(Attrs)
+type TextHandler func(CharData)
 type ErrorHandler func(error)
 
 type Decoder struct {
@@ -51,7 +53,10 @@ func (d *Decoder) Run() {
 		case xml.StartElement:
 			d.text.Reset()
 			d.events = append(d.events, t.Name.Local)
-			d.handleEvent(t.Attr, nil)
+			handler := d.getHandler()
+			if handler != nil {
+				handler.(func(Attrs))(t.Attr)
+			}
 			break
 		case xml.CharData:
 			d.text.Write(t)
@@ -61,7 +66,10 @@ func (d *Decoder) Run() {
 			if d.text.Len() > 0 {
 				numPop = 2
 				d.events = append(d.events, "$text")
-				d.handleEvent(nil, d.text.Bytes())
+				handler := d.getHandler()
+				if handler != nil {
+					handler.(func(CharData))(d.text.Bytes())
+				}
 			}
 			d.events = d.events[:len(d.events)-numPop]
 			break
@@ -69,12 +77,9 @@ func (d *Decoder) Run() {
 	}
 }
 
-func (d *Decoder) handleEvent(attrs Attrs, text CharData) {
+func (d *Decoder) getHandler() Handler {
 	fullEvent := strings.Join(d.events, "/")
-	handler := d.handlers[fullEvent]
-	if handler != nil {
-		handler(attrs, text)
-	}
+	return d.handlers[fullEvent]
 }
 
 type Attrs []xml.Attr

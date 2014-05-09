@@ -33,7 +33,7 @@ func (s *EXMLSuite) Test_Nested(c *check.C) {
 	handler2WasCalled := false
 	handler3WasCalled := false
 
-	decoder.On("root", func(attrs Attrs, text CharData) {
+	decoder.On("root", func(attrs Attrs) {
 		handler1WasCalled = true
 		attr1, _ := attrs.Get("attr1")
 		c.Assert(attr1, check.Equals, "root.attr1")
@@ -41,7 +41,7 @@ func (s *EXMLSuite) Test_Nested(c *check.C) {
 		c.Assert(attr2, check.Equals, "root.attr2")
 
 		nodeNum := 0
-		decoder.On("node", func(attrs Attrs, text CharData) {
+		decoder.On("node", func(attrs Attrs) {
 			handler2WasCalled = true
 			nodeNum = nodeNum + 1
 			attr1, _ := attrs.Get("attr1")
@@ -49,7 +49,7 @@ func (s *EXMLSuite) Test_Nested(c *check.C) {
 			attr2, _ := attrs.Get("attr2")
 			c.Assert(attr2, check.Equals, fmt.Sprintf("node%d.attr2", nodeNum))
 
-			decoder.On("subnode", func(attrs Attrs, text CharData) {
+			decoder.On("subnode", func(attrs Attrs) {
 				handler3WasCalled = true
 				attr1, _ := attrs.Get("attr1")
 				c.Assert(attr1, check.Equals, "subnode.attr1")
@@ -73,7 +73,7 @@ func (s *EXMLSuite) Test_Flat(c *check.C) {
 	handler2WasCalled := false
 	handler3WasCalled := false
 
-	decoder.On("root", func(attrs Attrs, text CharData) {
+	decoder.On("root", func(attrs Attrs) {
 		handler1WasCalled = true
 		attr1, _ := attrs.Get("attr1")
 		c.Assert(attr1, check.Equals, "root.attr1")
@@ -82,7 +82,7 @@ func (s *EXMLSuite) Test_Flat(c *check.C) {
 	})
 
 	nodeNum := 0
-	decoder.On("root/node", func(attrs Attrs, text CharData) {
+	decoder.On("root/node", func(attrs Attrs) {
 		handler2WasCalled = true
 		nodeNum = nodeNum + 1
 		attr1, _ := attrs.Get("attr1")
@@ -91,7 +91,7 @@ func (s *EXMLSuite) Test_Flat(c *check.C) {
 		c.Assert(attr2, check.Equals, fmt.Sprintf("node%d.attr2", nodeNum))
 	})
 
-	decoder.On("root/node/subnode", func(attrs Attrs, text CharData) {
+	decoder.On("root/node/subnode", func(attrs Attrs) {
 		handler3WasCalled = true
 		attr1, _ := attrs.Get("attr1")
 		c.Assert(attr1, check.Equals, "subnode.attr1")
@@ -114,7 +114,7 @@ func (s *EXMLSuite) Test_Mixed1(c *check.C) {
 	handler2WasCalled := false
 
 	nodeNum := 0
-	decoder.On("root/node", func(attrs Attrs, text CharData) {
+	decoder.On("root/node", func(attrs Attrs) {
 		handler1WasCalled = true
 		nodeNum = nodeNum + 1
 		attr1, _ := attrs.Get("attr1")
@@ -122,7 +122,7 @@ func (s *EXMLSuite) Test_Mixed1(c *check.C) {
 		attr2, _ := attrs.Get("attr2")
 		c.Assert(attr2, check.Equals, fmt.Sprintf("node%d.attr2", nodeNum))
 
-		decoder.On("subnode", func(attrs Attrs, text CharData) {
+		decoder.On("subnode", func(attrs Attrs) {
 			handler2WasCalled = true
 			attr1, _ := attrs.Get("attr1")
 			c.Assert(attr1, check.Equals, "subnode.attr1")
@@ -144,14 +144,14 @@ func (s *EXMLSuite) Test_Mixed2(c *check.C) {
 	handler1WasCalled := false
 	handler2WasCalled := false
 
-	decoder.On("root", func(attrs Attrs, text CharData) {
+	decoder.On("root", func(attrs Attrs) {
 		handler1WasCalled = true
 		attr1, _ := attrs.Get("attr1")
 		c.Assert(attr1, check.Equals, "root.attr1")
 		attr2, _ := attrs.Get("attr2")
 		c.Assert(attr2, check.Equals, "root.attr2")
 
-		decoder.On("node/subnode", func(attrs Attrs, text CharData) {
+		decoder.On("node/subnode", func(attrs Attrs) {
 			handler2WasCalled = true
 			attr1, _ := attrs.Get("attr1")
 			c.Assert(attr1, check.Equals, "subnode.attr1")
@@ -229,12 +229,11 @@ func runTextTest1(c *check.C, data string, expectedFmt string) {
 	nodeNum := 0
 	handlerWasCalled := []bool{false, false, false}
 
-	decoder.On("root", func(attrs Attrs, text CharData) {
-		decoder.On("node", func(attrs Attrs, text CharData) {
+	decoder.On("root", func(attrs Attrs) {
+		decoder.On("node", func(attrs Attrs) {
 			handlerWasCalled[nodeNum] = true
 			nodeNum = nodeNum + 1
-			decoder.On("$text", func(attrs Attrs, text CharData) {
-				c.Assert(len(attrs), check.Equals, 0)
+			decoder.On("$text", func(text CharData) {
 				c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
 			})
 		})
@@ -253,11 +252,10 @@ func runTextTest2(c *check.C, data string, expectedFmt string) {
 	nodeNum := 0
 	handlerWasCalled := []bool{false, false, false}
 
-	decoder.On("root/node", func(attrs Attrs, text CharData) {
+	decoder.On("root/node", func(attrs Attrs) {
 		handlerWasCalled[nodeNum] = true
 		nodeNum = nodeNum + 1
-		decoder.On("$text", func(attrs Attrs, text CharData) {
-			c.Assert(len(attrs), check.Equals, 0)
+		decoder.On("$text", func(text CharData) {
 			c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
 		})
 	})
@@ -276,10 +274,9 @@ func runTextTest3(c *check.C, data string, expectedFmt string) {
 	nodeNum := 0
 	handlerWasCalled := []bool{false, false, false}
 
-	decoder.On("root/node/$text", func(attrs Attrs, text CharData) {
+	decoder.On("root/node/$text", func(text CharData) {
 		handlerWasCalled[nodeNum] = true
 		nodeNum = nodeNum + 1
-		c.Assert(len(attrs), check.Equals, 0)
 		c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
 	})
 
@@ -359,19 +356,19 @@ func Benchmark_DecodeSimple(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var tree *SimpleTree
 
-		decoder.On("root", func(attrs Attrs, text CharData) {
+		decoder.On("root", func(attrs Attrs) {
 			tree = &SimpleTree{}
 			tree.XMLName = xml.Name{"", "root"}
 			tree.Attr1, _ = attrs.Get("attr1")
 			tree.Attr2, _ = attrs.Get("attr2")
 
-			decoder.On("node", func(attrs Attrs, text CharData) {
+			decoder.On("node", func(attrs Attrs) {
 				node := &SimpleTreeNode{}
 				node.Attr1, _ = attrs.Get("attr1")
 				node.Attr2, _ = attrs.Get("attr2")
 				tree.Nodes = append(tree.Nodes, node)
 
-				decoder.On("subnode", func(attrs Attrs, text CharData) {
+				decoder.On("subnode", func(attrs Attrs) {
 					node.Sub = &SimpleTreeNode{}
 					node.Sub.Attr1, _ = attrs.Get("attr1")
 					node.Sub.Attr2, _ = attrs.Get("attr2")
@@ -402,7 +399,7 @@ func runDecodeTextBenchmark(b *testing.B, data string) {
 
 	for i := 0; i < b.N; i++ {
 		l := &TextList{}
-		decoder.On("root/node/$text", func(attrs Attrs, text CharData) {
+		decoder.On("root/node/$text", func(text CharData) {
 			l.Texts = append(l.Texts, string(text))
 		})
 
