@@ -151,6 +151,25 @@ decoder.On("address/$text", decoder.Append(&info))
 ...
 ```
 
+# Benchmarks
+
+The included benchmarks show that **go-exml** can be *massively* faster than standard unmarshaling and the difference would most likely be even greater for bigger inputs.
+
+```shell
+% go test -bench . -benchmem
+OK: 16 passed
+PASS
+Benchmark_UnmarshalSimple      50000         55643 ns/op        6141 B/op        128 allocs/op
+Benchmark_UnmarshalText       100000         23253 ns/op        3522 B/op         64 allocs/op
+Benchmark_UnmarshalCDATA      100000         24455 ns/op        3611 B/op         64 allocs/op
+Benchmark_UnmarshalMixed      100000         29596 ns/op        4120 B/op         70 allocs/op
+Benchmark_DecodeSimple       5000000           375 ns/op          57 B/op          3 allocs/op
+Benchmark_DecodeText         5000000           541 ns/op         123 B/op          5 allocs/op
+Benchmark_DecodeCDATA        5000000           541 ns/op         123 B/op          5 allocs/op
+Benchmark_DecodeMixed        5000000           541 ns/op         123 B/op          5 allocs/op
+ok      github.com/lucsky/go-exml   23.966s
+```
+
 # License
 
 Code is under the [BSD 2 Clause (NetBSD) license][license].
