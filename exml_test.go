@@ -1,7 +1,10 @@
 package exml
 
 import (
+	"bytes"
+	"encoding/xml"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -316,4 +319,119 @@ func (s *EXMLSuite) Test_Error(c *check.C) {
 	decoder.Run()
 
 	c.Assert(handlerWasCalled, check.Equals, true)
+}
+
+// ============================================================================
+// Benchmarks
+
+type SimpleTreeNode struct {
+	Attr1 string          `xml:"attr1,attr"`
+	Attr2 string          `xml:"attr2,attr"`
+	Sub   *SimpleTreeNode `xml:"subnode"`
+}
+
+type SimpleTree struct {
+	XMLName xml.Name          `xml:"root"`
+	Attr1   string            `xml:"attr1,attr"`
+	Attr2   string            `xml:"attr2,attr"`
+	Nodes   []*SimpleTreeNode `xml:"node"`
+}
+
+func Benchmark_UnmarshalSimple(b *testing.B) {
+	data, _ := ioutil.ReadFile("test_files/simple.xml")
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		tree := &SimpleTree{}
+		var _ = xml.Unmarshal(data, tree)
+	}
+}
+
+func Benchmark_UnmarshalText(b *testing.B) {
+	runUnmarshalTextBenchmark(b, "test_files/text.xml")
+}
+
+func Benchmark_UnmarshalCDATA(b *testing.B) {
+	runUnmarshalTextBenchmark(b, "test_files/cdata.xml")
+}
+
+func Benchmark_UnmarshalMixed(b *testing.B) {
+	runUnmarshalTextBenchmark(b, "test_files/mixed.xml")
+}
+
+type TextList struct {
+	Texts []string `xml:"node"`
+}
+
+func runUnmarshalTextBenchmark(b *testing.B, filename string) {
+	data, _ := ioutil.ReadFile(filename)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		l := &TextList{}
+		var _ = xml.Unmarshal(data, l)
+	}
+}
+
+func Benchmark_DecodeSimple(b *testing.B) {
+	data, _ := ioutil.ReadFile("test_files/simple.xml")
+	reader := bytes.NewReader(data)
+	decoder := NewDecoder(reader)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		var tree *SimpleTree
+
+		decoder.On("root", func(attrs Attrs, text CharData) {
+			tree = &SimpleTree{}
+			tree.XMLName = xml.Name{"", "root"}
+			tree.Attr1, _ = attrs.Get("attr1")
+			tree.Attr2, _ = attrs.Get("attr2")
+
+			decoder.On("node", func(attrs Attrs, text CharData) {
+				node := &SimpleTreeNode{}
+				node.Attr1, _ = attrs.Get("attr1")
+				node.Attr2, _ = attrs.Get("attr2")
+				tree.Nodes = append(tree.Nodes, node)
+
+				decoder.On("subnode", func(attrs Attrs, text CharData) {
+					node.Sub = &SimpleTreeNode{}
+					node.Sub.Attr1, _ = attrs.Get("attr1")
+					node.Sub.Attr2, _ = attrs.Get("attr2")
+				})
+			})
+		})
+
+		decoder.Run()
+		reader.Seek(0, 0)
+	}
+}
+
+func Benchmark_DecodeText(b *testing.B) {
+	runDecodeTextBenchmark(b, "test_files/text.xml")
+}
+
+func Benchmark_DecodeCDATA(b *testing.B) {
+	runDecodeTextBenchmark(b, "test_files/cdata.xml")
+}
+
+func Benchmark_DecodeMixed(b *testing.B) {
+	runDecodeTextBenchmark(b, "test_files/mixed.xml")
+}
+
+func runDecodeTextBenchmark(b *testing.B, filename string) {
+	data, _ := ioutil.ReadFile(filename)
+	reader := bytes.NewReader(data)
+	decoder := NewDecoder(reader)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		l := &TextList{}
+		decoder.On("root/node/$text", func(attrs Attrs, text CharData) {
+			l.Texts = append(l.Texts, string(text))
+		})
+
+		decoder.Run()
+		reader.Seek(0, 0)
+	}
 }
