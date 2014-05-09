@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<root attr1="root.attr1" attr2="root.attr2">
+    <node attr1="node1.attr1" attr2="node1.attr2" />
+    <node attr1="node2.attr1" attr2="node2.attr2" />
+    <node attr1="node3.attr1" attr2="node3.attr2" />
+    <node attr1="node4.attr1" attr2="node4.attr2">
+        <subnode attr1="subnode.attr1" attr2="subnode.attr2" />
+    </node>
+</root>

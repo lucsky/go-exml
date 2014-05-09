@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<root>
+    <node><![CDATA[CDATA content 1]]></node>
+    <node><![CDATA[CDATA content 2]]></node>
+    <node><![CDATA[CDATA content 3]]></node>
+</root>
