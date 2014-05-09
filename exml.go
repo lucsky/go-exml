@@ -8,24 +8,7 @@ import (
 	"strings"
 )
 
-type Attrs []xml.Attr
-
-func (a Attrs) Get(key string) (string, error) {
-	for _, attr := range a {
-		if attr.Name.Local == key {
-			return attr.Value, nil
-		}
-	}
-
-	return "", errors.New("attribute not found")
-}
-
-func (a Attrs) Has(key string) bool {
-	_, err := a.Get(key)
-	return err == nil
-}
-
-type Handler func(Attrs, xml.CharData)
+type Handler func(Attrs, CharData)
 
 type Decoder struct {
 	decoder  *xml.Decoder
@@ -77,10 +60,23 @@ func (d *Decoder) Run() {
 	}
 }
 
-func (d *Decoder) handleEvent(attrs Attrs, text []byte) {
+func (d *Decoder) handleEvent(attrs Attrs, text CharData) {
 	fullEvent := strings.Join(d.events, "/")
 	handler := d.handlers[fullEvent]
 	if handler != nil {
 		handler(attrs, text)
 	}
+}
+
+type Attrs []xml.Attr
+type CharData xml.CharData
+
+func (a Attrs) Get(name string) (string, error) {
+	for _, attr := range a {
+		if attr.Name.Local == name {
+			return attr.Value, nil
+		}
+	}
+
+	return "", errors.New("attribute not found")
 }
