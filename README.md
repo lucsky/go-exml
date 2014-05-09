@@ -6,6 +6,10 @@ The **go-exml** package provides an intuitive event based XML parsing API which 
 
 ```go get github.com/lucsky/go-exml```
 
+or
+
+```go get http://gopkg.in/lucsky/go-exml.v1```
+
 # Usage
 
 The best way to illustrate how **go-exml** makes parsing very easy is to look at actual examples. Consider the following contrived sample document:
