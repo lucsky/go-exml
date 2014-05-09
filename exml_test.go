@@ -1,11 +1,8 @@
 package exml
 
 import (
-	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 
@@ -19,19 +16,23 @@ type EXMLSuite struct{}
 
 var _ = check.Suite(&EXMLSuite{})
 
+const SIMPLE = `<?xml version="1.0"?>
+<root attr1="root.attr1" attr2="root.attr2">
+    <node attr1="node1.attr1" attr2="node1.attr2" />
+    <node attr1="node2.attr1" attr2="node2.attr2" />
+    <node attr1="node3.attr1" attr2="node3.attr2" />
+    <node attr1="node4.attr1" attr2="node4.attr2">
+        <subnode attr1="subnode.attr1" attr2="subnode.attr2" />
+    </node>
+</root>`
+
 func (s *EXMLSuite) Test_Nested(c *check.C) {
-	reader, err := os.Open("test_files/simple.xml")
-	if err != nil {
-		c.Error(err)
-		c.FailNow()
-	}
-	defer reader.Close()
+	decoder := NewDecoder(strings.NewReader(SIMPLE))
 
 	handler1WasCalled := false
 	handler2WasCalled := false
 	handler3WasCalled := false
 
-	decoder := NewDecoder(reader)
 	decoder.On("root", func(attrs Attrs, text CharData) {
 		handler1WasCalled = true
 		attr1, _ := attrs.Get("attr1")
@@ -66,18 +67,11 @@ func (s *EXMLSuite) Test_Nested(c *check.C) {
 }
 
 func (s *EXMLSuite) Test_Flat(c *check.C) {
-	reader, err := os.Open("test_files/simple.xml")
-	if err != nil {
-		c.Error(err)
-		c.FailNow()
-	}
-	defer reader.Close()
+	decoder := NewDecoder(strings.NewReader(SIMPLE))
 
 	handler1WasCalled := false
 	handler2WasCalled := false
 	handler3WasCalled := false
-
-	decoder := NewDecoder(reader)
 
 	decoder.On("root", func(attrs Attrs, text CharData) {
 		handler1WasCalled = true
@@ -114,17 +108,10 @@ func (s *EXMLSuite) Test_Flat(c *check.C) {
 }
 
 func (s *EXMLSuite) Test_Mixed1(c *check.C) {
-	reader, err := os.Open("test_files/simple.xml")
-	if err != nil {
-		c.Error(err)
-		c.FailNow()
-	}
-	defer reader.Close()
+	decoder := NewDecoder(strings.NewReader(SIMPLE))
 
 	handler1WasCalled := false
 	handler2WasCalled := false
-
-	decoder := NewDecoder(reader)
 
 	nodeNum := 0
 	decoder.On("root/node", func(attrs Attrs, text CharData) {
@@ -152,17 +139,10 @@ func (s *EXMLSuite) Test_Mixed1(c *check.C) {
 }
 
 func (s *EXMLSuite) Test_Mixed2(c *check.C) {
-	reader, err := os.Open("test_files/simple.xml")
-	if err != nil {
-		c.Error(err)
-		c.FailNow()
-	}
-	defer reader.Close()
+	decoder := NewDecoder(strings.NewReader(SIMPLE))
 
 	handler1WasCalled := false
 	handler2WasCalled := false
-
-	decoder := NewDecoder(reader)
 
 	decoder.On("root", func(attrs Attrs, text CharData) {
 		handler1WasCalled = true
@@ -186,51 +166,66 @@ func (s *EXMLSuite) Test_Mixed2(c *check.C) {
 	c.Assert(handler2WasCalled, check.Equals, true)
 }
 
+const TEXT = `<?xml version="1.0"?>
+<root>
+    <node>text content 1</node>
+    <node>text content 2</node>
+    <node>text content 3</node>
+</root>`
+
 func (s *EXMLSuite) Test_Text1(c *check.C) {
-	runTextTest1(c, "test_files/text.xml", "text content %d")
+	runTextTest1(c, TEXT, "text content %d")
 }
 
 func (s *EXMLSuite) Test_Text2(c *check.C) {
-	runTextTest2(c, "test_files/text.xml", "text content %d")
+	runTextTest2(c, TEXT, "text content %d")
 }
 
 func (s *EXMLSuite) Test_Text3(c *check.C) {
-	runTextTest3(c, "test_files/text.xml", "text content %d")
+	runTextTest3(c, TEXT, "text content %d")
 }
 
+const CDATA = `<?xml version="1.0"?>
+<root>
+    <node><![CDATA[CDATA content 1]]></node>
+    <node><![CDATA[CDATA content 2]]></node>
+    <node><![CDATA[CDATA content 3]]></node>
+</root>`
+
 func (s *EXMLSuite) Test_CDATA1(c *check.C) {
-	runTextTest1(c, "test_files/cdata.xml", "CDATA content %d")
+	runTextTest1(c, CDATA, "CDATA content %d")
 }
 
 func (s *EXMLSuite) Test_CDATA2(c *check.C) {
-	runTextTest2(c, "test_files/cdata.xml", "CDATA content %d")
+	runTextTest2(c, CDATA, "CDATA content %d")
 }
 
 func (s *EXMLSuite) Test_CDATA3(c *check.C) {
-	runTextTest3(c, "test_files/cdata.xml", "CDATA content %d")
+	runTextTest3(c, CDATA, "CDATA content %d")
 }
 
+const MIXED = `<?xml version="1.0"?>
+<root>
+    <node>Text content followed by some <![CDATA[CDATA content 1]]></node>
+    <node>Text content followed by some <![CDATA[CDATA content 2]]></node>
+    <node>Text content followed by some <![CDATA[CDATA content 3]]></node>
+</root>`
+
 func (s *EXMLSuite) Test_MixedContent1(c *check.C) {
-	runTextTest1(c, "test_files/mixed.xml", "Text content followed by some CDATA content %d")
+	runTextTest1(c, MIXED, "Text content followed by some CDATA content %d")
 }
 
 func (s *EXMLSuite) Test_MixedContent2(c *check.C) {
-	runTextTest2(c, "test_files/mixed.xml", "Text content followed by some CDATA content %d")
+	runTextTest2(c, MIXED, "Text content followed by some CDATA content %d")
 }
 
 func (s *EXMLSuite) Test_MixedContent3(c *check.C) {
-	runTextTest3(c, "test_files/mixed.xml", "Text content followed by some CDATA content %d")
+	runTextTest3(c, MIXED, "Text content followed by some CDATA content %d")
 }
 
-func runTextTest1(c *check.C, testFile string, expectedFmt string) {
-	reader, err := os.Open(testFile)
-	if err != nil {
-		c.Error(err)
-		c.FailNow()
-	}
-	defer reader.Close()
+func runTextTest1(c *check.C, data string, expectedFmt string) {
+	decoder := NewDecoder(strings.NewReader(data))
 
-	decoder := NewDecoder(reader)
 	nodeNum := 0
 	handlerWasCalled := []bool{false, false, false}
 
@@ -252,15 +247,9 @@ func runTextTest1(c *check.C, testFile string, expectedFmt string) {
 	c.Assert(handlerWasCalled[2], check.Equals, true)
 }
 
-func runTextTest2(c *check.C, testFile string, expectedFmt string) {
-	reader, err := os.Open(testFile)
-	if err != nil {
-		c.Error(err)
-		c.FailNow()
-	}
-	defer reader.Close()
+func runTextTest2(c *check.C, data string, expectedFmt string) {
+	decoder := NewDecoder(strings.NewReader(data))
 
-	decoder := NewDecoder(reader)
 	nodeNum := 0
 	handlerWasCalled := []bool{false, false, false}
 
@@ -281,15 +270,9 @@ func runTextTest2(c *check.C, testFile string, expectedFmt string) {
 
 }
 
-func runTextTest3(c *check.C, testFile string, expectedFmt string) {
-	reader, err := os.Open(testFile)
-	if err != nil {
-		c.Error(err)
-		c.FailNow()
-	}
-	defer reader.Close()
+func runTextTest3(c *check.C, data string, expectedFmt string) {
+	decoder := NewDecoder(strings.NewReader(data))
 
-	decoder := NewDecoder(reader)
 	nodeNum := 0
 	handlerWasCalled := []bool{false, false, false}
 
@@ -307,9 +290,11 @@ func runTextTest3(c *check.C, testFile string, expectedFmt string) {
 	c.Assert(handlerWasCalled[2], check.Equals, true)
 }
 
+const MALFORMED = "<?xml version=\"1.0\"?><root></node>"
+
 func (s *EXMLSuite) Test_Error(c *check.C) {
-	reader := strings.NewReader("<?xml version=\"1.0\"?><root></node>")
-	decoder := NewDecoder(reader)
+	decoder := NewDecoder(strings.NewReader(MALFORMED))
+
 	handlerWasCalled := false
 
 	decoder.OnError(func(err error) {
@@ -338,46 +323,38 @@ type SimpleTree struct {
 }
 
 func Benchmark_UnmarshalSimple(b *testing.B) {
-	data, _ := ioutil.ReadFile("test_files/simple.xml")
-	b.ResetTimer()
-
 	for i := 0; i < b.N; i++ {
 		tree := &SimpleTree{}
-		var _ = xml.Unmarshal(data, tree)
+		var _ = xml.Unmarshal([]byte(SIMPLE), tree)
 	}
 }
 
 func Benchmark_UnmarshalText(b *testing.B) {
-	runUnmarshalTextBenchmark(b, "test_files/text.xml")
+	runUnmarshalTextBenchmark(b, TEXT)
 }
 
 func Benchmark_UnmarshalCDATA(b *testing.B) {
-	runUnmarshalTextBenchmark(b, "test_files/cdata.xml")
+	runUnmarshalTextBenchmark(b, CDATA)
 }
 
 func Benchmark_UnmarshalMixed(b *testing.B) {
-	runUnmarshalTextBenchmark(b, "test_files/mixed.xml")
+	runUnmarshalTextBenchmark(b, MIXED)
 }
 
 type TextList struct {
 	Texts []string `xml:"node"`
 }
 
-func runUnmarshalTextBenchmark(b *testing.B, filename string) {
-	data, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-
+func runUnmarshalTextBenchmark(b *testing.B, data string) {
 	for i := 0; i < b.N; i++ {
 		l := &TextList{}
-		var _ = xml.Unmarshal(data, l)
+		var _ = xml.Unmarshal([]byte(data), l)
 	}
 }
 
 func Benchmark_DecodeSimple(b *testing.B) {
-	data, _ := ioutil.ReadFile("test_files/simple.xml")
-	reader := bytes.NewReader(data)
+	reader := strings.NewReader(SIMPLE)
 	decoder := NewDecoder(reader)
-	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		var tree *SimpleTree
@@ -408,22 +385,20 @@ func Benchmark_DecodeSimple(b *testing.B) {
 }
 
 func Benchmark_DecodeText(b *testing.B) {
-	runDecodeTextBenchmark(b, "test_files/text.xml")
+	runDecodeTextBenchmark(b, TEXT)
 }
 
 func Benchmark_DecodeCDATA(b *testing.B) {
-	runDecodeTextBenchmark(b, "test_files/cdata.xml")
+	runDecodeTextBenchmark(b, CDATA)
 }
 
 func Benchmark_DecodeMixed(b *testing.B) {
-	runDecodeTextBenchmark(b, "test_files/mixed.xml")
+	runDecodeTextBenchmark(b, MIXED)
 }
 
-func runDecodeTextBenchmark(b *testing.B, filename string) {
-	data, _ := ioutil.ReadFile(filename)
-	reader := bytes.NewReader(data)
+func runDecodeTextBenchmark(b *testing.B, data string) {
+	reader := strings.NewReader(SIMPLE)
 	decoder := NewDecoder(reader)
-	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		l := &TextList{}
