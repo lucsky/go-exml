@@ -1,4 +1,4 @@
-# go-exml
+# go-exml [![Build Status](https://drone.io/github.com/lucsky/go-exml/status.png)](https://drone.io/github.com/lucsky/go-exml/latest)
 
 The **go-exml** package provides an intuitive event based XML parsing API which sits on top of a standard Go ```encoding/xml/Decoder```, greatly simplifying the parsing code while retaining the raw speed and low memory overhead of the underlying stream engine, regardless of the size of the input. The module takes care of the complex tasks of maintaining contexts between event handlers allowing you to concentrate on dealing with the actual structure of the XML document.
 
