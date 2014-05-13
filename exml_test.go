@@ -377,9 +377,10 @@ type TextList struct {
 }
 
 func runUnmarshalTextBenchmark(b *testing.B, data string) {
+	l := &TextList{}
 	for i := 0; i < b.N; i++ {
-		l := &TextList{}
 		var _ = xml.Unmarshal([]byte(data), l)
+		l.Texts = l.Texts[:0]
 	}
 }
 
@@ -388,10 +389,8 @@ func Benchmark_DecodeSimple(b *testing.B) {
 	decoder := NewDecoder(reader)
 
 	for i := 0; i < b.N; i++ {
-		var tree *SimpleTree
-
 		decoder.On("root", func(attrs Attrs) {
-			tree = &SimpleTree{}
+			tree := &SimpleTree{}
 			tree.XMLName = xml.Name{"", "root"}
 			tree.Attr1, _ = attrs.Get("attr1")
 			tree.Attr2, _ = attrs.Get("attr2")
@@ -430,14 +429,16 @@ func Benchmark_DecodeMixed(b *testing.B) {
 func runDecodeTextBenchmark(b *testing.B, data string) {
 	reader := strings.NewReader(data)
 	decoder := NewDecoder(reader)
+	l := &TextList{}
 
 	for i := 0; i < b.N; i++ {
-		l := &TextList{}
 		decoder.On("root/node/$text", func(text CharData) {
 			l.Texts = append(l.Texts, string(text))
 		})
 
 		decoder.Run()
+
 		reader.Seek(0, 0)
+		l.Texts = l.Texts[:0]
 	}
 }
