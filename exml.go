@@ -92,10 +92,14 @@ func (d *Decoder) Run() {
 			d.text.Write(t)
 			break
 		case xml.EndElement:
-			if d.text.Len() > 0 {
-				h := d.currentHandler.subHandlers["$text"]
+			text := bytes.TrimSpace(d.text.Bytes())
+			if len(text) > 0 {
+				h := d.topHandler.subHandlers["$text"]
+				if h == nil {
+					h = d.currentHandler.subHandlers["$text"]
+				}
 				if h != nil && h.callback != nil {
-					h.callback.(func(CharData))(d.text.Bytes())
+					h.callback.(func(CharData))(text)
 				}
 			}
 			if d.currentHandler != d.topHandler {

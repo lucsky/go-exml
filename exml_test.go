@@ -208,6 +208,10 @@ func (s *EXMLSuite) Test_Text3(c *check.C) {
 	runTextTest3(c, TEXT, "text content %d")
 }
 
+func (s *EXMLSuite) Test_Text4(c *check.C) {
+	runTextTest4(c, TEXT, "text content %d")
+}
+
 const CDATA = `<?xml version="1.0"?>
 <root>
     <node><![CDATA[CDATA content 1]]></node>
@@ -227,6 +231,10 @@ func (s *EXMLSuite) Test_CDATA3(c *check.C) {
 	runTextTest3(c, CDATA, "CDATA content %d")
 }
 
+func (s *EXMLSuite) Test_CDATA4(c *check.C) {
+	runTextTest4(c, CDATA, "CDATA content %d")
+}
+
 const MIXED = `<?xml version="1.0"?>
 <root>
     <node>Text content followed by some <![CDATA[CDATA content 1]]></node>
@@ -244,6 +252,10 @@ func (s *EXMLSuite) Test_MixedContent2(c *check.C) {
 
 func (s *EXMLSuite) Test_MixedContent3(c *check.C) {
 	runTextTest3(c, MIXED, "Text content followed by some CDATA content %d")
+}
+
+func (s *EXMLSuite) Test_MixedContent4(c *check.C) {
+	runTextTest4(c, MIXED, "Text content followed by some CDATA content %d")
 }
 
 func runTextTest1(c *check.C, data string, expectedFmt string) {
@@ -308,6 +320,20 @@ func runTextTest3(c *check.C, data string, expectedFmt string) {
 	c.Assert(handlerWasCalled[0], check.Equals, true)
 	c.Assert(handlerWasCalled[1], check.Equals, true)
 	c.Assert(handlerWasCalled[2], check.Equals, true)
+}
+
+func runTextTest4(c *check.C, data string, expectedFmt string) {
+	decoder := NewDecoder(strings.NewReader(data))
+	nodeNum := 0
+
+	decoder.On("$text", func(text CharData) {
+		nodeNum = nodeNum + 1
+		if nodeNum <= 3 {
+			c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
+		}
+	})
+
+	decoder.Run()
 }
 
 const ASSIGN = `<?xml version="1.0"?>
