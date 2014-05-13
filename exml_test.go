@@ -172,6 +172,23 @@ func (s *EXMLSuite) Test_Mixed2(c *check.C) {
 	c.Assert(handler2WasCalled, check.Equals, true)
 }
 
+func (s *EXMLSuite) Test_Global(c *check.C) {
+	decoder := NewDecoder(strings.NewReader(SIMPLE))
+
+	handlerWasCalled := false
+	decoder.On("subnode", func(attrs Attrs) {
+		handlerWasCalled = true
+		attr1, _ := attrs.Get("attr1")
+		c.Assert(attr1, check.Equals, "subnode.attr1")
+		attr2, _ := attrs.Get("attr2")
+		c.Assert(attr2, check.Equals, "subnode.attr2")
+	})
+
+	decoder.Run()
+
+	c.Assert(handlerWasCalled, check.Equals, true)
+}
+
 const TEXT = `<?xml version="1.0"?>
 <root>
     <node>text content 1</node>

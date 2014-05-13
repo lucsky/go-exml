@@ -8,43 +8,67 @@ import (
 	"strings"
 )
 
-type Handler interface{}
-type ElemHandler func(Attrs)
-type TextHandler func(CharData)
-type ErrorHandler func(error)
+type Callback interface{}
+type ElemCallback func(Attrs)
+type TextCallback func(CharData)
+type ErrorCallback func(error)
+
+type handler struct {
+	callback    Callback
+	subHandlers map[string]*handler
+	parent      *handler
+}
 
 type Decoder struct {
-	decoder      *xml.Decoder
-	handlers     map[string]Handler
-	errorHandler ErrorHandler
-	events       []string
-	text         *bytes.Buffer
+	decoder        *xml.Decoder
+	topHandler     *handler
+	currentHandler *handler
+	text           *bytes.Buffer
+	errorCallback  ErrorCallback
 }
 
 func NewDecoder(r io.Reader) *Decoder {
+	topHandler := &handler{nil, nil, nil}
 	return &Decoder{
-		decoder:  xml.NewDecoder(r),
-		handlers: make(map[string]Handler),
-		events:   []string{"/"},
-		text:     new(bytes.Buffer),
+		decoder:        xml.NewDecoder(r),
+		text:           bytes.NewBuffer(nil),
+		topHandler:     topHandler,
+		currentHandler: topHandler,
 	}
 }
 
-func (d *Decoder) On(event string, handler Handler) {
-	fullEvent := strings.Join(append(d.events, event), "/")
-	d.handlers[fullEvent] = handler
+func (d *Decoder) On(event string, callback Callback) {
+	h := d.currentHandler
+	events := strings.Split(event, "/")
+	for i, event := range events {
+		sub := h.subHandlers[event]
+		if sub == nil {
+			if i < len(events)-1 {
+				sub = &handler{nil, nil, h}
+			} else {
+				sub = &handler{callback, nil, h}
+			}
+		}
+
+		if h.subHandlers == nil {
+			h.subHandlers = make(map[string]*handler)
+		}
+
+		h.subHandlers[event] = sub
+		h = sub
+	}
 }
 
-func (d *Decoder) OnError(handler ErrorHandler) {
-	d.errorHandler = handler
+func (d *Decoder) OnError(handler ErrorCallback) {
+	d.errorCallback = handler
 }
 
 func (d *Decoder) Run() {
 	for {
 		token, err := d.decoder.Token()
 		if token == nil {
-			if d.errorHandler != nil {
-				d.errorHandler(err)
+			if d.errorCallback != nil {
+				d.errorCallback(err)
 			}
 			break
 		}
@@ -52,26 +76,31 @@ func (d *Decoder) Run() {
 		switch t := token.(type) {
 		case xml.StartElement:
 			d.text.Reset()
-			d.events = append(d.events, t.Name.Local)
-			handler := d.getHandler()
-			if handler != nil {
-				handler.(func(Attrs))(t.Attr)
+			h := d.topHandler.subHandlers[t.Name.Local]
+			if h == nil && d.currentHandler != d.topHandler {
+				h = d.currentHandler.subHandlers[t.Name.Local]
+			}
+			if h != nil {
+				h.parent = d.currentHandler
+				d.currentHandler = h
+				if h != nil && h.callback != nil {
+					h.callback.(func(Attrs))(t.Attr)
+				}
 			}
 			break
 		case xml.CharData:
 			d.text.Write(t)
 			break
 		case xml.EndElement:
-			numPop := 1
 			if d.text.Len() > 0 {
-				numPop = 2
-				d.events = append(d.events, "$text")
-				handler := d.getHandler()
-				if handler != nil {
-					handler.(func(CharData))(d.text.Bytes())
+				h := d.currentHandler.subHandlers["$text"]
+				if h != nil && h.callback != nil {
+					h.callback.(func(CharData))(d.text.Bytes())
 				}
 			}
-			d.events = d.events[:len(d.events)-numPop]
+			if d.currentHandler != d.topHandler {
+				d.currentHandler = d.currentHandler.parent
+			}
 			break
 		}
 	}
@@ -87,11 +116,6 @@ func (d *Decoder) Append(a *[]string) func(CharData) {
 	return func(c CharData) {
 		*a = append(*a, string(c))
 	}
-}
-
-func (d *Decoder) getHandler() Handler {
-	fullEvent := strings.Join(d.events, "/")
-	return d.handlers[fullEvent]
 }
 
 type Attrs []xml.Attr
