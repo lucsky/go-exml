@@ -26,6 +26,12 @@ const SIMPLE = `<?xml version="1.0"?>
     </node>
 </root>`
 
+func (s *EXMLSuite) Test_Empty(c *check.C) {
+	decoder := NewDecoder(strings.NewReader(SIMPLE))
+	decoder.Run()
+	c.Succeed()
+}
+
 func (s *EXMLSuite) Test_Nested(c *check.C) {
 	decoder := NewDecoder(strings.NewReader(SIMPLE))
 
