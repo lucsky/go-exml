@@ -4,11 +4,21 @@ The **go-exml** package provides an intuitive event based XML parsing API which 
 
 # Installation
 
+**HEAD:**
+
 ```go get github.com/lucsky/go-exml```
 
-or
+**v2:**
+
+```go get http://gopkg.in/lucsky/go-exml.v2```
+
+New better implementation based on a dynamic handler tree, allowing global events (see example below), having lower memory usage and also being faster.
+
+**v1:**
 
 ```go get http://gopkg.in/lucsky/go-exml.v1```
+
+Initial (and naive) implementation based on a flat list of absolute event paths.
 
 # Usage
 
@@ -155,23 +165,34 @@ decoder.On("address/$text", decoder.Append(&info))
 ...
 ```
 
+The second version (aka v2) of **go-exml** introduced global events which allow to register a top level handler that would be picked up at any level whenever a corresponding XML node is encountered. For example, this snippet would allow to print all text nodes regardless of their depth and parent tag:
+
+```go
+
+decoder := exml.NewDecoder(reader)
+decoder.On("$text", func(text CharData) {
+    fmt.Println(string(text))
+})
+
+```
+
 # Benchmarks
 
 The included benchmarks show that **go-exml** can be *massively* faster than standard unmarshaling and the difference would most likely be even greater for bigger inputs.
 
 ```shell
 % go test -bench . -benchmem
-OK: 16 passed
+OK: 21 passed
 PASS
-Benchmark_UnmarshalSimple      50000         55643 ns/op        6141 B/op        128 allocs/op
-Benchmark_UnmarshalText       100000         23253 ns/op        3522 B/op         64 allocs/op
-Benchmark_UnmarshalCDATA      100000         24455 ns/op        3611 B/op         64 allocs/op
-Benchmark_UnmarshalMixed      100000         29596 ns/op        4120 B/op         70 allocs/op
-Benchmark_DecodeSimple       5000000           375 ns/op          57 B/op          3 allocs/op
-Benchmark_DecodeText         5000000           541 ns/op         123 B/op          5 allocs/op
-Benchmark_DecodeCDATA        5000000           541 ns/op         123 B/op          5 allocs/op
-Benchmark_DecodeMixed        5000000           541 ns/op         123 B/op          5 allocs/op
-ok      github.com/lucsky/go-exml   23.966s
+Benchmark_UnmarshalSimple      50000         56520 ns/op        6086 B/op        128 allocs/op
+Benchmark_UnmarshalText       100000         22158 ns/op        3476 B/op         61 allocs/op
+Benchmark_UnmarshalCDATA      100000         22952 ns/op        3508 B/op         61 allocs/op
+Benchmark_UnmarshalMixed      100000         28216 ns/op        4147 B/op         67 allocs/op
+Benchmark_DecodeSimple      10000000           289 ns/op          34 B/op          2 allocs/op
+Benchmark_DecodeText         5000000           508 ns/op          66 B/op          2 allocs/op
+Benchmark_DecodeCDATA        5000000           509 ns/op          66 B/op          2 allocs/op
+Benchmark_DecodeMixed        5000000           508 ns/op          66 B/op          2 allocs/op
+ok      github.com/lucsky/go-exml   23.902s
 ```
 
 # License
