@@ -75,7 +75,6 @@ func (d *Decoder) Run() {
 
 		switch t := token.(type) {
 		case xml.StartElement:
-			d.text.Reset()
 			h := d.topHandler.subHandlers[t.Name.Local]
 			if h == nil && d.currentHandler != d.topHandler {
 				h = d.currentHandler.subHandlers[t.Name.Local]
@@ -93,6 +92,7 @@ func (d *Decoder) Run() {
 			break
 		case xml.EndElement:
 			text := bytes.TrimSpace(d.text.Bytes())
+			d.text.Reset()
 			if len(text) > 0 {
 				h := d.topHandler.subHandlers["$text"]
 				if h == nil {
