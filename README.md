@@ -184,15 +184,15 @@ The included benchmarks show that **go-exml** can be *massively* faster than sta
 % go test -bench . -benchmem
 OK: 21 passed
 PASS
-Benchmark_UnmarshalSimple      50000         56520 ns/op        6086 B/op        128 allocs/op
-Benchmark_UnmarshalText       100000         22158 ns/op        3476 B/op         61 allocs/op
-Benchmark_UnmarshalCDATA      100000         22952 ns/op        3508 B/op         61 allocs/op
-Benchmark_UnmarshalMixed      100000         28216 ns/op        4147 B/op         67 allocs/op
-Benchmark_DecodeSimple      10000000           289 ns/op          34 B/op          2 allocs/op
-Benchmark_DecodeText         5000000           508 ns/op          66 B/op          2 allocs/op
-Benchmark_DecodeCDATA        5000000           509 ns/op          66 B/op          2 allocs/op
-Benchmark_DecodeMixed        5000000           508 ns/op          66 B/op          2 allocs/op
-ok      github.com/lucsky/go-exml   23.902s
+Benchmark_UnmarshalSimple      50000         57156 ns/op        6138 B/op        128 allocs/op
+Benchmark_UnmarshalText       100000         22423 ns/op        3452 B/op         61 allocs/op
+Benchmark_UnmarshalCDATA      100000         23460 ns/op        3483 B/op         61 allocs/op
+Benchmark_UnmarshalMixed      100000         28807 ns/op        4034 B/op         67 allocs/op
+Benchmark_DecodeSimple       5000000           376 ns/op          66 B/op          3 allocs/op
+Benchmark_DecodeText         5000000           598 ns/op          98 B/op          3 allocs/op
+Benchmark_DecodeCDATA        5000000           598 ns/op          98 B/op          3 allocs/op
+Benchmark_DecodeMixed        5000000           596 ns/op          98 B/op          3 allocs/op
+ok      github.com/lucsky/go-exml   24.767s
 ```
 
 # License
