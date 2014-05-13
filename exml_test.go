@@ -428,7 +428,7 @@ func Benchmark_DecodeMixed(b *testing.B) {
 }
 
 func runDecodeTextBenchmark(b *testing.B, data string) {
-	reader := strings.NewReader(SIMPLE)
+	reader := strings.NewReader(data)
 	decoder := NewDecoder(reader)
 
 	for i := 0; i < b.N; i++ {
