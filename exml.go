@@ -42,12 +42,12 @@ func (d *Decoder) On(event string, callback Callback) {
 	events := strings.Split(event, "/")
 	for i, event := range events {
 		sub := h.subHandlers[event]
-		if sub == nil {
-			if i < len(events)-1 {
+		if i < len(events)-1 {
+			if sub == nil {
 				sub = &handler{nil, nil, h}
-			} else {
-				sub = &handler{callback, nil, h}
 			}
+		} else {
+			sub = &handler{callback, nil, h}
 		}
 
 		if h.subHandlers == nil {
