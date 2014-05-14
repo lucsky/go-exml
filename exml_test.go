@@ -16,6 +16,37 @@ type EXMLSuite struct{}
 
 var _ = check.Suite(&EXMLSuite{})
 
+const ATTRIBUTE = `<?xml version="1.0"?><node attr="node.attr" />`
+
+func (s *EXMLSuite) Test_AttributeReaders(c *check.C) {
+	decoder := NewDecoder(strings.NewReader(ATTRIBUTE))
+	handlerWasCalled := false
+
+	decoder.On("node", func(attrs Attrs) {
+		handlerWasCalled = true
+
+		var attr string
+		var err error
+
+		attr, err = attrs.Get("attr")
+		c.Assert(attr, check.Equals, "node.attr")
+		c.Assert(err, check.Equals, nil)
+
+		attr, err = attrs.Get("omfglol")
+		c.Assert(attr, check.Equals, "")
+		c.Assert(err, check.Equals, AttributeNotFoundError)
+
+		attr = attrs.GetString("attr", "default")
+		c.Assert(attr, check.Equals, "node.attr")
+
+		attr = attrs.GetString("omfglol", "default")
+		c.Assert(attr, check.Equals, "default")
+	})
+
+	decoder.Run()
+	c.Assert(handlerWasCalled, check.Equals, true)
+}
+
 const SIMPLE = `<?xml version="1.0"?>
 <root attr1="root.attr1" attr2="root.attr2">
     <node attr1="node1.attr1" attr2="node1.attr2" />

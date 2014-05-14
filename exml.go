@@ -138,3 +138,12 @@ func (a Attrs) Get(name string) (string, error) {
 
 	return "", AttributeNotFoundError
 }
+
+func (a Attrs) GetString(name string, fallback string) string {
+	val, err := a.Get(name)
+	if err != nil {
+		return fallback
+	}
+
+	return val
+}
