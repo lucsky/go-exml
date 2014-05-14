@@ -23,7 +23,7 @@ type Decoder struct {
 	decoder        *xml.Decoder
 	topHandler     *handler
 	currentHandler *handler
-	text           *bytes.Buffer
+	text           []byte
 	errorCallback  ErrorCallback
 }
 
@@ -31,7 +31,6 @@ func NewDecoder(r io.Reader) *Decoder {
 	topHandler := &handler{nil, nil, nil}
 	return &Decoder{
 		decoder:        xml.NewDecoder(r),
-		text:           bytes.NewBuffer(nil),
 		topHandler:     topHandler,
 		currentHandler: topHandler,
 	}
@@ -91,10 +90,10 @@ func (d *Decoder) Run() {
 			}
 			break
 		case xml.CharData:
-			d.text.Write(t)
+			d.text = append(d.text, t...)
 			break
 		case xml.EndElement:
-			text := bytes.TrimSpace(d.text.Bytes())
+			text := bytes.TrimSpace(d.text)
 			if len(text) > 0 {
 				h := d.topHandler.subHandlers["$text"]
 				if h == nil {
@@ -107,7 +106,7 @@ func (d *Decoder) Run() {
 			if d.currentHandler != d.topHandler {
 				d.currentHandler = d.currentHandler.parent
 			}
-			d.text.Reset()
+			d.text = d.text[:0]
 			break
 		}
 	}
