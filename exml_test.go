@@ -26,15 +26,15 @@ func (s *EXMLSuite) Test_AttributeReaders(c *check.C) {
 		handlerWasCalled = true
 
 		var attr string
-		var err error
+		var ok bool
 
-		attr, err = attrs.Get("attr")
+		attr, ok = attrs.Get("attr")
 		c.Assert(attr, check.Equals, "node.attr")
-		c.Assert(err, check.Equals, nil)
+		c.Assert(ok, check.Equals, true)
 
-		attr, err = attrs.Get("omfglol")
+		attr, ok = attrs.Get("omfglol")
 		c.Assert(attr, check.Equals, "")
-		c.Assert(err, check.Equals, AttributeNotFoundError)
+		c.Assert(ok, check.Equals, false)
 
 		attr = attrs.GetString("attr", "default")
 		c.Assert(attr, check.Equals, "node.attr")

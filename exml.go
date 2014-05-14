@@ -3,7 +3,6 @@ package exml
 import (
 	"bytes"
 	"encoding/xml"
-	"errors"
 	"io"
 	"strings"
 )
@@ -124,21 +123,19 @@ func Append(a *[]string) func(CharData) {
 type Attrs []xml.Attr
 type CharData xml.CharData
 
-var AttributeNotFoundError = errors.New("attribute not found")
-
-func (a Attrs) Get(name string) (string, error) {
+func (a Attrs) Get(name string) (string, bool) {
 	for _, attr := range a {
 		if attr.Name.Local == name {
-			return attr.Value, nil
+			return attr.Value, true
 		}
 	}
 
-	return "", AttributeNotFoundError
+	return "", false
 }
 
 func (a Attrs) GetString(name string, fallback string) string {
-	val, err := a.Get(name)
-	if err != nil {
+	val, ok := a.Get(name)
+	if !ok {
 		return fallback
 	}
 
