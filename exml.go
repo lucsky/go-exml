@@ -95,7 +95,6 @@ func (d *Decoder) Run() {
 			break
 		case xml.EndElement:
 			text := bytes.TrimSpace(d.text.Bytes())
-			d.text.Reset()
 			if len(text) > 0 {
 				h := d.topHandler.subHandlers["$text"]
 				if h == nil {
@@ -108,6 +107,7 @@ func (d *Decoder) Run() {
 			if d.currentHandler != d.topHandler {
 				d.currentHandler = d.currentHandler.parent
 			}
+			d.text.Reset()
 			break
 		}
 	}
