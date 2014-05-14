@@ -440,7 +440,7 @@ func Benchmark_DecodeSimple(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		decoder.On("root", func(attrs Attrs) {
 			tree := &SimpleTree{}
-			tree.XMLName = xml.Name{"", "root"}
+			tree.XMLName = xml.Name{Space: "", Local: "root"}
 			tree.Attr1, _ = attrs.Get("attr1")
 			tree.Attr2, _ = attrs.Get("attr2")
 
