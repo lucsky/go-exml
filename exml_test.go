@@ -345,7 +345,7 @@ func (s *EXMLSuite) Test_Assign(c *check.C) {
 	var text string
 
 	decoder := NewDecoder(strings.NewReader(ASSIGN))
-	decoder.On("root/node/$text", decoder.Assign(&text))
+	decoder.On("root/node/$text", Assign(&text))
 	decoder.Run()
 
 	c.Assert(text, check.Equals, "Text content")
@@ -362,7 +362,7 @@ func (s *EXMLSuite) Test_Append(c *check.C) {
 	texts := []string{}
 
 	decoder := NewDecoder(strings.NewReader(APPEND))
-	decoder.On("root/node/$text", decoder.Append(&texts))
+	decoder.On("root/node/$text", Append(&texts))
 	decoder.Run()
 
 	c.Assert(texts[0], check.Equals, "Text content 1")

@@ -142,9 +142,9 @@ Finally, since using nodes text content to initialize struct fields is a pretty 
 ...
 
 contact := &Contact{}
-decoder.On("first-name/$text", decoder.Assign(&contact.FirstName))
-decoder.On("last-name/$text", decoder.Assign(&contact.LastName))
-decoder.On("address/$text", decoder.Assign(&contact.Address))
+decoder.On("first-name/$text", exml.Assign(&contact.FirstName))
+decoder.On("last-name/$text", exml.Assign(&contact.LastName))
+decoder.On("address/$text", exml.Assign(&contact.Address))
 
 ...
 ...
