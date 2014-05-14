@@ -9,6 +9,83 @@ import (
 	"gopkg.in/check.v1"
 )
 
+// ============================================================================
+// Example
+
+const EXAMPLE = `<?xml version="1.0"?>
+<address-book name="homies">
+    <contact>
+        <first-name>Tim</first-name>
+        <last-name>Cook</last-name>
+        <address>Cupertino</address>
+    </contact>
+    <contact>
+        <first-name>Steve</first-name>
+        <last-name>Ballmer</last-name>
+        <address>Redmond</address>
+    </contact>
+    <contact>
+        <first-name>Mark</first-name>
+        <last-name>Zuckerberg</last-name>
+        <address>Menlo Park</address>
+    </contact>
+</address-book>`
+
+type AddressBook struct {
+	Name     string
+	Contacts []*Contact
+}
+
+type Contact struct {
+	FirstName string
+	LastName  string
+	Address   string
+}
+
+func Example() {
+	reader := strings.NewReader(EXAMPLE)
+	decoder := NewDecoder(reader)
+
+	addressBook := AddressBook{}
+
+	decoder.On("address-book", func(attrs Attrs) {
+		addressBook.Name, _ = attrs.Get("name")
+
+		decoder.On("contact", func(attrs Attrs) {
+			contact := &Contact{}
+			addressBook.Contacts = append(addressBook.Contacts, contact)
+
+			decoder.On("first-name/$text", func(text CharData) {
+				contact.FirstName = string(text)
+			})
+
+			decoder.On("last-name/$text", func(text CharData) {
+				contact.LastName = string(text)
+			})
+
+			decoder.On("address/$text", func(text CharData) {
+				contact.Address = string(text)
+			})
+		})
+	})
+
+	decoder.Run()
+
+	fmt.Printf("Address book: %s\n", addressBook.Name)
+	for _, c := range addressBook.Contacts {
+		fmt.Println("-", c.FirstName, c.LastName, "@", c.Address)
+	}
+
+	// Output:
+	// Address book: homies
+	// - Tim Cook @ Cupertino
+	// - Steve Ballmer @ Redmond
+	// - Mark Zuckerberg @ Menlo Park
+}
+
+// ============================================================================
+// Tests
+
 // Hook up gocheck into the "go test" runner.
 func Test(t *testing.T) { check.TestingT(t) }
 
