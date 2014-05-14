@@ -88,10 +88,8 @@ func (d *Decoder) Run() {
 					h.callback.(func(Attrs))(t.Attr)
 				}
 			}
-			break
 		case xml.CharData:
 			d.text = append(d.text, t...)
-			break
 		case xml.EndElement:
 			text := bytes.TrimSpace(d.text)
 			if len(text) > 0 {
@@ -107,7 +105,6 @@ func (d *Decoder) Run() {
 				d.currentHandler = d.currentHandler.parent
 			}
 			d.text = d.text[:0]
-			break
 		}
 	}
 }
