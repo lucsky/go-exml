@@ -85,7 +85,7 @@ func (d *Decoder) Run() {
 			if h != nil {
 				h.parent = d.currentHandler
 				d.currentHandler = h
-				if h != nil && h.callback != nil {
+				if h.callback != nil {
 					h.callback.(func(Attrs))(t.Attr)
 				}
 			}
