@@ -127,6 +127,8 @@ func Append(a *[]string) func(CharData) {
 type Attrs []xml.Attr
 type CharData xml.CharData
 
+var AttributeNotFoundError = errors.New("attribute not found")
+
 func (a Attrs) Get(name string) (string, error) {
 	for _, attr := range a {
 		if attr.Name.Local == name {
@@ -134,5 +136,5 @@ func (a Attrs) Get(name string) (string, error) {
 		}
 	}
 
-	return "", errors.New("attribute not found")
+	return "", AttributeNotFoundError
 }
