@@ -38,11 +38,14 @@ func NewDecoder(r io.Reader) *Decoder {
 }
 
 func (d *Decoder) On(event string, callback Callback) {
-	h := d.currentHandler
 	events := strings.Split(event, "/")
-	for i, event := range events {
-		sub := h.subHandlers[event]
-		if i < len(events)-1 {
+	depth := len(events) - 1
+	h := d.currentHandler
+
+	for i, ev := range events {
+		var sub *handler
+		if i < depth {
+			sub = h.subHandlers[ev]
 			if sub == nil {
 				sub = &handler{nil, nil, h}
 			}
@@ -54,7 +57,7 @@ func (d *Decoder) On(event string, callback Callback) {
 			h.subHandlers = make(map[string]*handler)
 		}
 
-		h.subHandlers[event] = sub
+		h.subHandlers[ev] = sub
 		h = sub
 	}
 }
