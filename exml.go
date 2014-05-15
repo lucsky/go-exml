@@ -16,18 +16,18 @@ type handler struct {
 	callback    Callback
 	subHandlers map[string]*handler
 	parent      *handler
+	text        []byte
 }
 
 type Decoder struct {
 	decoder        *xml.Decoder
 	topHandler     *handler
 	currentHandler *handler
-	text           []byte
 	errorCallback  ErrorCallback
 }
 
 func NewDecoder(r io.Reader) *Decoder {
-	topHandler := &handler{nil, nil, nil}
+	topHandler := &handler{callback: nil, subHandlers: nil, parent: nil}
 	return &Decoder{
 		decoder:        xml.NewDecoder(r),
 		topHandler:     topHandler,
@@ -45,10 +45,10 @@ func (d *Decoder) On(event string, callback Callback) {
 		if i < depth {
 			sub = h.subHandlers[ev]
 			if sub == nil {
-				sub = &handler{nil, nil, h}
+				sub = &handler{callback: nil, subHandlers: nil, parent: h}
 			}
 		} else {
-			sub = &handler{callback, nil, h}
+			sub = &handler{callback: callback, subHandlers: nil, parent: h}
 		}
 
 		if h.subHandlers == nil {
@@ -76,35 +76,44 @@ func (d *Decoder) Run() {
 
 		switch t := token.(type) {
 		case xml.StartElement:
-			h := d.topHandler.subHandlers[t.Name.Local]
-			if h == nil && d.currentHandler != d.topHandler {
-				h = d.currentHandler.subHandlers[t.Name.Local]
-			}
-			if h != nil {
-				h.parent = d.currentHandler
-				d.currentHandler = h
-				if h.callback != nil {
-					h.callback.(func(Attrs))(t.Attr)
-				}
-			}
+			d.handleText()
+			d.handleToken(t)
 		case xml.CharData:
-			d.text = append(d.text, t...)
+			d.currentHandler.text = append(d.currentHandler.text, t...)
 		case xml.EndElement:
-			text := bytes.TrimSpace(d.text)
-			if len(text) > 0 {
-				h := d.topHandler.subHandlers["$text"]
-				if h == nil {
-					h = d.currentHandler.subHandlers["$text"]
-				}
-				if h != nil && h.callback != nil {
-					h.callback.(func(CharData))(text)
-				}
-			}
+			d.handleText()
 			if d.currentHandler != d.topHandler {
 				d.currentHandler = d.currentHandler.parent
 			}
-			d.text = d.text[:0]
 		}
+	}
+}
+
+func (d *Decoder) handleToken(t xml.StartElement) {
+	h := d.topHandler.subHandlers[t.Name.Local]
+	if h == nil && d.currentHandler != d.topHandler {
+		h = d.currentHandler.subHandlers[t.Name.Local]
+	}
+
+	if h != nil {
+		h.parent = d.currentHandler
+		d.currentHandler = h
+		if h.callback != nil {
+			h.callback.(func(Attrs))(t.Attr)
+		}
+	}
+}
+
+func (d *Decoder) handleText() {
+	h := d.topHandler.subHandlers["$text"]
+	if h == nil {
+		h = d.currentHandler.subHandlers["$text"]
+	}
+
+	text := bytes.TrimSpace(d.currentHandler.text)
+	if h != nil && h.callback != nil && len(text) > 0 {
+		d.currentHandler.text = d.currentHandler.text[:0]
+		h.callback.(func(CharData))(text)
 	}
 }
 

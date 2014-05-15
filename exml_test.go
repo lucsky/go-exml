@@ -478,6 +478,21 @@ func (s *EXMLSuite) Test_Append(c *check.C) {
 	c.Assert(texts[2], check.Equals, "Text content 3")
 }
 
+const NESTED_TEXT = `<?xml version="1.0"?>
+<root>Root text 1<node>Node text</node>Root text 2</root>`
+
+func (s *EXMLSuite) Test_NestedText(c *check.C) {
+	texts := []string{}
+
+	decoder := NewDecoder(strings.NewReader(NESTED_TEXT))
+	decoder.On("$text", Append(&texts))
+	decoder.Run()
+
+	c.Assert(texts[0], check.Equals, "Root text 1")
+	c.Assert(texts[1], check.Equals, "Node text")
+	c.Assert(texts[2], check.Equals, "Root text 2")
+}
+
 const MALFORMED = "<?xml version=\"1.0\"?><root></node>"
 
 func (s *EXMLSuite) Test_Error(c *check.C) {
