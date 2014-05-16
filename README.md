@@ -8,11 +8,17 @@ The **go-exml** package provides an intuitive event based XML parsing API which 
 
 ```go get github.com/lucsky/go-exml```
 
+**v3:**
+
+```go get http://gopkg.in/lucsky/go-exml.v3```
+
+The third version of **go-exml** provides compile time callback safety at the cost of an **API CHANGE**. Ad hoc ```$text``` events have been replaced by the specific ```OnText``` and ```OnTextOf``` event registration methods.
+
 **v2:**
 
 ```go get http://gopkg.in/lucsky/go-exml.v2```
 
-New better implementation based on a dynamic handler tree, allowing global events (see example below), having lower memory usage and also being faster.
+The second version of **go-exml** has a better implementation based on a dynamic handler tree, allowing global events (see example below), having lower memory usage and also being faster.
 
 **v1:**
 
@@ -114,65 +120,55 @@ func main() {
 To reduce the amount and depth of event callbacks that you have to write, **go-exml** allows you to register handlers on **events paths**:
 
 ```go
-...
-...
-
 decoder.OnTextOf("address-book/contact/first-name", func(text exml.CharData) {
     fmt.Println("First name: ", string(text))
 })
 
-decoder.OnTextOf("address-book/contact/last-name", func(text exml.CharData) {
-    fmt.Println("Last name: ", string(text))
+// This works too:
+decoder.On("address-book/contact", func(attrs exml.Attrs) {
+    decoder.OnTextOf(last-name", func(text exml.CharData) {
+        fmt.Println("Last name: ", string(text))
+    })
 })
 
-decoder.OnTextOf("address-book/contact/address", func(text exml.CharData) {
-    fmt.Println("Address: ", string(text))
+// And this as well:
+decoder.On("address-book/contact/address", func(attrs exml.Attrs) {
+    decoder.OnText(func(text exml.CharData) {
+        fmt.Println("Address: ", string(text))
+    })
 })
-
-...
-...
 ```
 
 Finally, since using nodes text content to initialize struct fields is a pretty frequent task, **go-exml** provides a shortcut to make it shorter to write. Let's revisit our address book example and use this shortcut:
 
 ```go
-...
-...
-
 contact := &Contact{}
 decoder.OnTextOf("first-name", exml.Assign(&contact.FirstName))
 decoder.OnTextOf("last-name", exml.Assign(&contact.LastName))
 decoder.OnTextOf("address", exml.Assign(&contact.Address))
-
-...
-...
 ```
 
 Another shortcut allows to accumulate text content from various nodes to a single slice:
 
 ```go
-...
-...
-
 info := []string{}
 decoder.OnTextOf("first-name", decoder.Append(&info))
 decoder.OnTextOf("last-name", decoder.Append(&info))
 decoder.OnTextOf("address", decoder.Append(&info))
-
-...
-...
 ```
 
 The second version (aka v2) of **go-exml** introduced global events which allow to register a top level handler that would be picked up at any level whenever a corresponding XML node is encountered. For example, this snippet would allow to print all text nodes regardless of their depth and parent tag:
 
 ```go
-
 decoder := exml.NewDecoder(reader)
 decoder.OnText(func(text CharData) {
     fmt.Println(string(text))
 })
-
 ```
+
+# API
+
+The full API is visible at the **go-exml** [gopkg.in][gopkg] page.
 
 # Benchmarks
 
@@ -180,7 +176,7 @@ The included benchmarks show that **go-exml** can be *massively* faster than sta
 
 ```shell
 % go test -bench . -benchmem
-OK: 21 passed
+OK: 23 passed
 PASS
 Benchmark_UnmarshalSimple      50000         57156 ns/op        6138 B/op        128 allocs/op
 Benchmark_UnmarshalText       100000         22423 ns/op        3452 B/op         61 allocs/op
@@ -198,3 +194,4 @@ ok      github.com/lucsky/go-exml   11.194s
 Code is under the [BSD 2 Clause (NetBSD) license][license].
 
 [license]:https://github.com/lucsky/go-exml/tree/master/LICENSE
+[gopkg]:http://gopkg.in/lucsky/go-exml.v3
