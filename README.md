@@ -83,19 +83,19 @@ func main() {
             addressBook.Contacts = append(addressBook.Contacts, contact)
 
             decoder.On("first-name", func(attrs exml.Attrs) {
-                decoder.On("$text", func(text exml.CharData) {
+                decoder.OnText(func(text exml.CharData) {
                     contact.FirstName = string(text)
                 })
             })
 
             decoder.On("last-name", func(attrs exml.Attrs) {
-                decoder.On("$text", func(text exml.CharData) {
+                decoder.OnText(func(text exml.CharData) {
                     contact.LastName = string(text)
                 })
             })
 
             decoder.On("address", func(attrs exml.Attrs) {
-                decoder.On("$text", func(text exml.CharData) {
+                decoder.OnText(func(text exml.CharData) {
                     contact.Address = string(text)
                 })
             })
@@ -111,40 +111,38 @@ func main() {
 }
 ```
 
-To reduce the amount and depth of event callbacks that you have to write, **go-exml** provides **stacked events**. Here's how you can simplify the last example using stacked events:
+To reduce the amount and depth of event callbacks that you have to write, **go-exml** allows you to register handlers on **events paths**:
 
 ```go
 ...
 ...
 
-contact := &Contact{}
-
-decoder.On("first-name/$text", func(text exml.CharData) {
-    contact.FirstName = string(text)
+decoder.OnTextOf("address-book/contact/first-name", func(text exml.CharData) {
+    fmt.Println("First name: ", string(text))
 })
 
-decoder.On("last-name/$text", func(text exml.CharData) {
-    contact.LastName = string(text)
+decoder.OnTextOf("address-book/contact/last-name", func(text exml.CharData) {
+    fmt.Println("Last name: ", string(text))
 })
 
-decoder.On("address/$text", func(text exml.CharData) {
-    contact.Address = string(text)
+decoder.OnTextOf("address-book/contact/address", func(text exml.CharData) {
+    fmt.Println("Address: ", string(text))
 })
 
 ...
 ...
 ```
 
-Finally, since using nodes text content to initialize struct fields is a pretty frequent task, **go-exml** provides a shortcut to make it shorter to write. Let's revisit the previous example and use this shortcut:
+Finally, since using nodes text content to initialize struct fields is a pretty frequent task, **go-exml** provides a shortcut to make it shorter to write. Let's revisit our address book example and use this shortcut:
 
 ```go
 ...
 ...
 
 contact := &Contact{}
-decoder.On("first-name/$text", exml.Assign(&contact.FirstName))
-decoder.On("last-name/$text", exml.Assign(&contact.LastName))
-decoder.On("address/$text", exml.Assign(&contact.Address))
+decoder.OnTextOf("first-name", exml.Assign(&contact.FirstName))
+decoder.OnTextOf("last-name", exml.Assign(&contact.LastName))
+decoder.OnTextOf("address", exml.Assign(&contact.Address))
 
 ...
 ...
@@ -157,9 +155,9 @@ Another shortcut allows to accumulate text content from various nodes to a singl
 ...
 
 info := []string{}
-decoder.On("first-name/$text", decoder.Append(&info))
-decoder.On("last-name/$text", decoder.Append(&info))
-decoder.On("address/$text", decoder.Append(&info))
+decoder.OnTextOf("first-name", decoder.Append(&info))
+decoder.OnTextOf("last-name", decoder.Append(&info))
+decoder.OnTextOf("address", decoder.Append(&info))
 
 ...
 ...
@@ -170,7 +168,7 @@ The second version (aka v2) of **go-exml** introduced global events which allow 
 ```go
 
 decoder := exml.NewDecoder(reader)
-decoder.On("$text", func(text CharData) {
+decoder.OnText(func(text CharData) {
     fmt.Println(string(text))
 })
 
@@ -192,7 +190,8 @@ Benchmark_DecodeSimple       5000000           388 ns/op          99 B/op       
 Benchmark_DecodeText         5000000           485 ns/op         114 B/op          3 allocs/op
 Benchmark_DecodeCDATA        5000000           485 ns/op         114 B/op          3 allocs/op
 Benchmark_DecodeMixed        5000000           487 ns/op         114 B/op          3 allocs/op
-ok      github.com/lucsky/go-exml   11.194s```
+ok      github.com/lucsky/go-exml   11.194s
+```
 
 # License
 
