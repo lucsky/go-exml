@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-type Callback interface{}
-type ElemCallback func(Attrs)
+type TagCallback func(Attrs)
 type TextCallback func(CharData)
 type ErrorCallback func(error)
 
 type handler struct {
-	callback    Callback
-	subHandlers map[string]*handler
-	parent      *handler
-	text        []byte
+	tagCallback   TagCallback
+	textCallback  TextCallback
+	subHandlers   map[string]*handler
+	parentHandler *handler
+	text          []byte
 }
 
 type Decoder struct {
@@ -27,7 +27,7 @@ type Decoder struct {
 }
 
 func NewDecoder(r io.Reader) *Decoder {
-	topHandler := &handler{callback: nil, subHandlers: nil, parent: nil}
+	topHandler := &handler{}
 	return &Decoder{
 		decoder:        xml.NewDecoder(r),
 		topHandler:     topHandler,
@@ -35,20 +35,34 @@ func NewDecoder(r io.Reader) *Decoder {
 	}
 }
 
-func (d *Decoder) On(event string, callback Callback) {
-	events := strings.Split(event, "/")
+func (d *Decoder) On(path string, callback TagCallback) {
+	h := d.installHandlers(path)
+	h.tagCallback = callback
+}
+
+func (d *Decoder) OnTextOf(path string, callback TextCallback) {
+	h := d.installHandlers(path)
+	h.textCallback = callback
+}
+
+func (d *Decoder) OnText(callback TextCallback) {
+	d.currentHandler.textCallback = callback
+}
+
+func (d *Decoder) installHandlers(path string) *handler {
+	events := strings.Split(path, "/")
 	depth := len(events) - 1
 	h := d.currentHandler
 
+	var sub *handler
 	for i, ev := range events {
-		var sub *handler
 		if i < depth {
 			sub = h.subHandlers[ev]
 			if sub == nil {
-				sub = &handler{callback: nil, subHandlers: nil, parent: h}
+				sub = &handler{parentHandler: h}
 			}
 		} else {
-			sub = &handler{callback: callback, subHandlers: nil, parent: h}
+			sub = &handler{parentHandler: h}
 		}
 
 		if h.subHandlers == nil {
@@ -58,6 +72,8 @@ func (d *Decoder) On(event string, callback Callback) {
 		h.subHandlers[ev] = sub
 		h = sub
 	}
+
+	return sub
 }
 
 func (d *Decoder) OnError(handler ErrorCallback) {
@@ -77,60 +93,55 @@ func (d *Decoder) Run() {
 		switch t := token.(type) {
 		case xml.StartElement:
 			d.handleText()
-			d.handleToken(t)
+			d.handleTag(t)
 		case xml.CharData:
 			d.currentHandler.text = append(d.currentHandler.text, t...)
 		case xml.EndElement:
 			d.handleText()
 			if d.currentHandler != d.topHandler {
-				d.currentHandler = d.currentHandler.parent
+				d.currentHandler = d.currentHandler.parentHandler
 			}
 		}
 	}
 }
 
-func (d *Decoder) handleToken(t xml.StartElement) {
+func (d *Decoder) handleTag(t xml.StartElement) {
 	h := d.topHandler.subHandlers[t.Name.Local]
 	if h == nil && d.currentHandler != d.topHandler {
 		h = d.currentHandler.subHandlers[t.Name.Local]
 	}
 
 	if h != nil {
-		h.parent = d.currentHandler
+		h.parentHandler = d.currentHandler
 		d.currentHandler = h
-		if h.callback != nil {
-			h.callback.(func(Attrs))(t.Attr)
+		if h.tagCallback != nil {
+			h.tagCallback(t.Attr)
 		}
 	}
 }
 
 func (d *Decoder) handleText() {
-	h := d.topHandler.subHandlers["$text"]
-	if h == nil {
-		h = d.currentHandler.subHandlers["$text"]
-	}
-
 	text := bytes.TrimSpace(d.currentHandler.text)
-	if h != nil && h.callback != nil && len(text) > 0 {
-		d.currentHandler.text = d.currentHandler.text[:0]
-		h.callback.(func(CharData))(text)
+	d.currentHandler.text = d.currentHandler.text[:0]
+	if d.currentHandler.textCallback != nil && len(text) > 0 {
+		d.currentHandler.textCallback(text)
 	}
 }
 
-func Assign(slot *string) func(CharData) {
+func Assign(v *string) TextCallback {
 	return func(c CharData) {
-		*slot = string(c)
+		*v = string(c)
 	}
 }
 
-func Append(a *[]string) func(CharData) {
+func Append(a *[]string) TextCallback {
 	return func(c CharData) {
 		*a = append(*a, string(c))
 	}
 }
 
-type Attrs []xml.Attr
 type CharData xml.CharData
+type Attrs []xml.Attr
 
 func (a Attrs) Get(name string) (string, bool) {
 	for _, attr := range a {

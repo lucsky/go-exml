@@ -55,15 +55,15 @@ func Example() {
 			contact := &Contact{}
 			addressBook.Contacts = append(addressBook.Contacts, contact)
 
-			decoder.On("first-name/$text", func(text CharData) {
+			decoder.OnTextOf("first-name", func(text CharData) {
 				contact.FirstName = string(text)
 			})
 
-			decoder.On("last-name/$text", func(text CharData) {
+			decoder.OnTextOf("last-name", func(text CharData) {
 				contact.LastName = string(text)
 			})
 
-			decoder.On("address/$text", func(text CharData) {
+			decoder.OnTextOf("address", func(text CharData) {
 				contact.Address = string(text)
 			})
 		})
@@ -376,7 +376,7 @@ func runTextTest1(c *check.C, data string, expectedFmt string) {
 		decoder.On("node", func(attrs Attrs) {
 			handlerWasCalled[nodeNum] = true
 			nodeNum = nodeNum + 1
-			decoder.On("$text", func(text CharData) {
+			decoder.OnText(func(text CharData) {
 				c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
 			})
 		})
@@ -398,7 +398,7 @@ func runTextTest2(c *check.C, data string, expectedFmt string) {
 	decoder.On("root/node", func(attrs Attrs) {
 		handlerWasCalled[nodeNum] = true
 		nodeNum = nodeNum + 1
-		decoder.On("$text", func(text CharData) {
+		decoder.OnText(func(text CharData) {
 			c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
 		})
 	})
@@ -417,7 +417,7 @@ func runTextTest3(c *check.C, data string, expectedFmt string) {
 	nodeNum := 0
 	handlerWasCalled := []bool{false, false, false}
 
-	decoder.On("root/node/$text", func(text CharData) {
+	decoder.OnTextOf("root/node", func(text CharData) {
 		handlerWasCalled[nodeNum] = true
 		nodeNum = nodeNum + 1
 		c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
@@ -432,16 +432,21 @@ func runTextTest3(c *check.C, data string, expectedFmt string) {
 
 func runTextTest4(c *check.C, data string, expectedFmt string) {
 	decoder := NewDecoder(strings.NewReader(data))
-	nodeNum := 0
 
-	decoder.On("$text", func(text CharData) {
+	nodeNum := 0
+	handlerWasCalled := []bool{false, false, false}
+
+	decoder.OnText(func(text CharData) {
+		handlerWasCalled[nodeNum] = true
 		nodeNum = nodeNum + 1
-		if nodeNum <= 3 {
-			c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
-		}
+		c.Assert(string(text), check.Equals, fmt.Sprintf(expectedFmt, nodeNum))
 	})
 
 	decoder.Run()
+
+	c.Assert(handlerWasCalled[0], check.Equals, true)
+	c.Assert(handlerWasCalled[1], check.Equals, true)
+	c.Assert(handlerWasCalled[2], check.Equals, true)
 }
 
 const ASSIGN = `<?xml version="1.0"?>
@@ -453,7 +458,7 @@ func (s *EXMLSuite) Test_Assign(c *check.C) {
 	var text string
 
 	decoder := NewDecoder(strings.NewReader(ASSIGN))
-	decoder.On("root/node/$text", Assign(&text))
+	decoder.OnTextOf("root/node", Assign(&text))
 	decoder.Run()
 
 	c.Assert(text, check.Equals, "Text content")
@@ -470,7 +475,7 @@ func (s *EXMLSuite) Test_Append(c *check.C) {
 	texts := []string{}
 
 	decoder := NewDecoder(strings.NewReader(APPEND))
-	decoder.On("root/node/$text", Append(&texts))
+	decoder.OnTextOf("root/node", Append(&texts))
 	decoder.Run()
 
 	c.Assert(texts[0], check.Equals, "Text content 1")
@@ -485,7 +490,7 @@ func (s *EXMLSuite) Test_NestedText(c *check.C) {
 	texts := []string{}
 
 	decoder := NewDecoder(strings.NewReader(NESTED_TEXT))
-	decoder.On("$text", Append(&texts))
+	decoder.OnText(Append(&texts))
 	decoder.Run()
 
 	c.Assert(texts[0], check.Equals, "Root text 1")
@@ -604,7 +609,7 @@ func runDecodeTextBenchmark(b *testing.B, data string) {
 	l := &TextList{}
 
 	for i := 0; i < b.N; i++ {
-		decoder.On("root/node/$text", func(text CharData) {
+		decoder.OnTextOf("root/node", func(text CharData) {
 			l.Texts = append(l.Texts, string(text))
 		})
 

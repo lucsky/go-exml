@@ -188,12 +188,11 @@ Benchmark_UnmarshalSimple      50000         57156 ns/op        6138 B/op       
 Benchmark_UnmarshalText       100000         22423 ns/op        3452 B/op         61 allocs/op
 Benchmark_UnmarshalCDATA      100000         23460 ns/op        3483 B/op         61 allocs/op
 Benchmark_UnmarshalMixed      100000         28807 ns/op        4034 B/op         67 allocs/op
-Benchmark_DecodeSimple       5000000           400 ns/op          98 B/op          3 allocs/op
-Benchmark_DecodeText         5000000           607 ns/op         130 B/op          3 allocs/op
-Benchmark_DecodeCDATA        5000000           607 ns/op         130 B/op          3 allocs/op
-Benchmark_DecodeMixed        5000000           609 ns/op         130 B/op          3 allocs/op
-ok      github.com/lucsky/go-exml   13.431sok      github.com/lucsky/go-exml   24.767s
-```
+Benchmark_DecodeSimple       5000000           388 ns/op          99 B/op          3 allocs/op
+Benchmark_DecodeText         5000000           485 ns/op         114 B/op          3 allocs/op
+Benchmark_DecodeCDATA        5000000           485 ns/op         114 B/op          3 allocs/op
+Benchmark_DecodeMixed        5000000           487 ns/op         114 B/op          3 allocs/op
+ok      github.com/lucsky/go-exml   11.194s```
 
 # License
 
