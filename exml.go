@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -156,6 +157,62 @@ func (a Attrs) Get(name string) (string, bool) {
 func (a Attrs) GetString(name string, fallback string) string {
 	val, ok := a.Get(name)
 	if !ok {
+		return fallback
+	}
+
+	return val
+}
+
+func (a Attrs) GetBool(name string, fallback bool) bool {
+	strVal, ok := a.Get(name)
+	if !ok {
+		return fallback
+	}
+
+	val, err := strconv.ParseBool(strVal)
+	if err != nil {
+		return fallback
+	}
+
+	return val
+}
+
+func (a Attrs) GetFloat(name string, bitsize int, fallback float64) float64 {
+	strVal, ok := a.Get(name)
+	if !ok {
+		return fallback
+	}
+
+	val, err := strconv.ParseFloat(strVal, bitsize)
+	if err != nil {
+		return fallback
+	}
+
+	return val
+}
+
+func (a Attrs) GetInt(name string, base int, bitsize int, fallback int64) int64 {
+	strVal, ok := a.Get(name)
+	if !ok {
+		return fallback
+	}
+
+	val, err := strconv.ParseInt(strVal, base, bitsize)
+	if err != nil {
+		return fallback
+	}
+
+	return val
+}
+
+func (a Attrs) GetUInt(name string, base int, bitsize int, fallback uint64) uint64 {
+	strVal, ok := a.Get(name)
+	if !ok {
+		return fallback
+	}
+
+	val, err := strconv.ParseUint(strVal, base, bitsize)
+	if err != nil {
 		return fallback
 	}
 

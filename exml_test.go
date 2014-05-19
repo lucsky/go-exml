@@ -93,7 +93,8 @@ type EXMLSuite struct{}
 
 var _ = check.Suite(&EXMLSuite{})
 
-const ATTRIBUTE = `<?xml version="1.0"?><node attr="node.attr" />`
+const ATTRIBUTE = `<?xml version="1.0"?>
+<node attr="node.attr" b1="true" b2="false" b3="foo" f1="2.5" f2="foo" i1="-42" i2="foo" ui1="42" ui2="foo" />`
 
 func (s *EXMLSuite) Test_AttributeReaders(c *check.C) {
 	decoder := NewDecoder(strings.NewReader(ATTRIBUTE))
@@ -118,6 +119,23 @@ func (s *EXMLSuite) Test_AttributeReaders(c *check.C) {
 
 		attr = attrs.GetString("omfglol", "default")
 		c.Assert(attr, check.Equals, "default")
+
+		c.Assert(attrs.GetBool("b1", false), check.Equals, true)
+		c.Assert(attrs.GetBool("b2", true), check.Equals, false)
+		c.Assert(attrs.GetBool("b3", true), check.Equals, true)
+		c.Assert(attrs.GetBool("b4", true), check.Equals, true)
+
+		c.Assert(attrs.GetFloat("f1", 64, 0.0), check.Equals, 2.5)
+		c.Assert(attrs.GetFloat("f2", 64, 2.5), check.Equals, 2.5)
+		c.Assert(attrs.GetFloat("f3", 64, 2.5), check.Equals, 2.5)
+
+		c.Assert(attrs.GetInt("i1", 10, 64, 0), check.Equals, int64(-42))
+		c.Assert(attrs.GetInt("i2", 10, 64, -42), check.Equals, int64(-42))
+		c.Assert(attrs.GetInt("i3", 10, 64, -42), check.Equals, int64(-42))
+
+		c.Assert(attrs.GetUInt("ui1", 10, 64, 0), check.Equals, uint64(42))
+		c.Assert(attrs.GetUInt("ui2", 10, 64, 42), check.Equals, uint64(42))
+		c.Assert(attrs.GetUInt("ui3", 10, 64, 42), check.Equals, uint64(42))
 	})
 
 	decoder.Run()
