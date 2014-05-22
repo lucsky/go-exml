@@ -1,3 +1,11 @@
+/*
+The exml package provides an intuitive event based XML parsing API which sits
+on top of a standard Go xml.Decoder, greatly simplifying the parsing code
+while retaining the raw speed and low memory overhead of the underlying stream
+engine, regardless of the size of the input. The package takes care of the
+complex tasks of maintaining contexts between event handlers allowing you to
+concentrate on dealing with the actual structure of the XML document.
+*/
 package exml
 
 import (
@@ -20,6 +28,8 @@ type handler struct {
 	text          []byte
 }
 
+// A Decoder wraps an xml.Decoder and maintains the various states
+// between the encountered XML nodes during parsing.
 type Decoder struct {
 	decoder        *xml.Decoder
 	topHandler     *handler
@@ -27,10 +37,14 @@ type Decoder struct {
 	errorCallback  ErrorCallback
 }
 
+// NewDecoder creates a new exml parser reading from r.
 func NewDecoder(r io.Reader) *Decoder {
 	return NewCustomDecoder(xml.NewDecoder(r))
 }
 
+// NewCustomDecoder creates a new exml parser reading from the passed
+// xml.Decoder which is useful when you need to configure the underlying
+// decoder, when you need to handle non-UTF8 xml documents for example.
 func NewCustomDecoder(d *xml.Decoder) *Decoder {
 	topHandler := &handler{}
 	return &Decoder{
@@ -40,16 +54,20 @@ func NewCustomDecoder(d *xml.Decoder) *Decoder {
 	}
 }
 
+// On registers a handler for a single tag or for a path.
 func (d *Decoder) On(path string, callback TagCallback) {
 	h := d.installHandlers(path)
 	h.tagCallback = callback
 }
 
+// OnTextOf registers a handler for the text content of a single tag or
+// for the text content at a certain path.
 func (d *Decoder) OnTextOf(path string, callback TextCallback) {
 	h := d.installHandlers(path)
 	h.textCallback = callback
 }
 
+// OnText registers a handler for the text content of the current tag.
 func (d *Decoder) OnText(callback TextCallback) {
 	d.currentHandler.textCallback = callback
 }
@@ -81,10 +99,13 @@ func (d *Decoder) installHandlers(path string) *handler {
 	return sub
 }
 
+// OnError registers a global error handler which will be called whenever
+// the underlying xml.Decoder reports an error.
 func (d *Decoder) OnError(handler ErrorCallback) {
 	d.errorCallback = handler
 }
 
+// Run starts the parsing process.
 func (d *Decoder) Run() {
 	for {
 		token, err := d.decoder.Token()
@@ -133,12 +154,16 @@ func (d *Decoder) handleText() {
 	}
 }
 
+// Assign is a helper function which returns a text callback that assigns
+// the text content of the current tag to the passed variable pointer.
 func Assign(v *string) TextCallback {
 	return func(c CharData) {
 		*v = string(c)
 	}
 }
 
+// Append is a helper function which returns a text callback that appends
+// the text content of the current tag to the passed strings slice pointer.
 func Append(a *[]string) TextCallback {
 	return func(c CharData) {
 		*a = append(*a, string(c))
@@ -148,6 +173,8 @@ func Append(a *[]string) TextCallback {
 type CharData xml.CharData
 type Attrs []xml.Attr
 
+// Get returns the value of the requested attribute and true when the
+// attributes exists, or an empty string and false when it doesn't.
 func (a Attrs) Get(name string) (string, bool) {
 	for _, attr := range a {
 		if attr.Name.Local == name {
@@ -158,6 +185,8 @@ func (a Attrs) Get(name string) (string, bool) {
 	return "", false
 }
 
+// GetString returns the value of the requested attribute when it exists
+// or the passed fallback value when it doesn't.
 func (a Attrs) GetString(name string, fallback string) string {
 	val, ok := a.Get(name)
 	if !ok {
@@ -167,6 +196,9 @@ func (a Attrs) GetString(name string, fallback string) string {
 	return val
 }
 
+// GetBool returns the value of the requested attribute as a bool when it
+// exists or the passed fallback value when it doesn't. The accepted values
+// corresponds to the one accepted by the strconv.ParseBool() function.
 func (a Attrs) GetBool(name string, fallback bool) bool {
 	strVal, ok := a.Get(name)
 	if !ok {
@@ -181,6 +213,10 @@ func (a Attrs) GetBool(name string, fallback bool) bool {
 	return val
 }
 
+// GetFloat returns the value of the requested attribute as a float when it
+// exists or the passed fallback value when it doesn't. The additional
+// parameters and the accepted values corresponds to the one accepted by
+// the strconv.ParseFloat() function.
 func (a Attrs) GetFloat(name string, bitsize int, fallback float64) float64 {
 	strVal, ok := a.Get(name)
 	if !ok {
@@ -195,6 +231,10 @@ func (a Attrs) GetFloat(name string, bitsize int, fallback float64) float64 {
 	return val
 }
 
+// GetInt returns the value of the requested attribute as an int when it
+// exists or the passed fallback value when it doesn't. The additional
+// parameters and the accepted values corresponds to the one accepted by
+// the strconv.ParseInt() function.
 func (a Attrs) GetInt(name string, base int, bitsize int, fallback int64) int64 {
 	strVal, ok := a.Get(name)
 	if !ok {
@@ -209,6 +249,10 @@ func (a Attrs) GetInt(name string, base int, bitsize int, fallback int64) int64 
 	return val
 }
 
+// GetUInt returns the value of the requested attribute as an uint when it
+// exists or the passed fallback value when it doesn't. The additional
+// parameters and the accepted values corresponds to the one accepted by
+// the strconv.ParseUint() function.
 func (a Attrs) GetUInt(name string, base int, bitsize int, fallback uint64) uint64 {
 	strVal, ok := a.Get(name)
 	if !ok {
