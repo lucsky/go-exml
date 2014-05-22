@@ -28,9 +28,13 @@ type Decoder struct {
 }
 
 func NewDecoder(r io.Reader) *Decoder {
+	return NewCustomDecoder(xml.NewDecoder(r))
+}
+
+func NewCustomDecoder(d *xml.Decoder) *Decoder {
 	topHandler := &handler{}
 	return &Decoder{
-		decoder:        xml.NewDecoder(r),
+		decoder:        d,
 		topHandler:     topHandler,
 		currentHandler: topHandler,
 	}
