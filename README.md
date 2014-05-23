@@ -126,7 +126,7 @@ decoder.OnTextOf("address-book/contact/first-name", func(text exml.CharData) {
 
 // This works too:
 decoder.On("address-book/contact", func(attrs exml.Attrs) {
-    decoder.OnTextOf(last-name", func(text exml.CharData) {
+    decoder.OnTextOf("last-name", func(text exml.CharData) {
         fmt.Println("Last name: ", string(text))
     })
 })
