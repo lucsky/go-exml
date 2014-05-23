@@ -10,19 +10,19 @@ The **exml** package provides an intuitive event based XML parsing API which sit
 
 **v3:**
 
-```go get http://gopkg.in/lucsky/go-exml.v3```
+```go get gopkg.in/lucsky/go-exml.v3```
 
 The third version of **exml** provides compile time callback safety at the cost of an **API CHANGE**. Ad hoc ```$text``` events have been replaced by the specific ```OnText``` and ```OnTextOf``` event registration methods.
 
 **v2:**
 
-```go get http://gopkg.in/lucsky/go-exml.v2```
+```go get gopkg.in/lucsky/go-exml.v2```
 
 The second version of **exml** has a better implementation based on a dynamic handler tree, allowing global events (see example below), having lower memory usage and also being faster.
 
 **v1:**
 
-```go get http://gopkg.in/lucsky/go-exml.v1```
+```go get gopkg.in/lucsky/go-exml.v1```
 
 Initial (and naive) implementation based on a flat list of absolute event paths.
 
