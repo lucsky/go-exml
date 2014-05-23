@@ -189,6 +189,11 @@ Benchmark_DecodeMixed        5000000           487 ns/op         114 B/op       
 ok      github.com/lucsky/go-exml   11.194s
 ```
 
+# Contributors
+
+* Luc Heinrich (author)
+* Hubert Figuière
+
 # License
 
 Code is under the [BSD 2 Clause (NetBSD) license][license].
