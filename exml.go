@@ -162,11 +162,127 @@ func Assign(v *string) TextCallback {
 	}
 }
 
+// AssignBool is a helper function which returns a text callback that
+// assigns the text content of the current tag parsed as a bool to the
+// passed variable pointer. The accepted text values correspond to the
+// one accepted by the strconv.ParseBool() function. The fallback parameter
+// value is used when the parsing of the text content fails.
+func AssignBool(v *bool, fallback bool) TextCallback {
+	return func(c CharData) {
+		val, err := strconv.ParseBool(string(c))
+		if err == nil {
+			*v = val
+		} else {
+			*v = fallback
+		}
+	}
+}
+
+// AssignFloat is a helper function which returns a text callback that
+// assigns the text content of the current tag parsed as a float to the
+// passed variable pointer. The accepted text values correspond to the
+// one accepted by the strconv.ParseFloat() function. The fallback parameter
+// value is used when the parsing of the text content fails.
+func AssignFloat(v *float64, bitsize int, fallback float64) TextCallback {
+	return func(c CharData) {
+		val, err := strconv.ParseFloat(string(c), bitsize)
+		if err == nil {
+			*v = val
+		} else {
+			*v = fallback
+		}
+	}
+}
+
+// AssignInt is a helper function which returns a text callback that
+// assigns the text content of the current tag parsed as an int to the
+// passed variable pointer. The accepted text values correspond to the
+// one accepted by the strconv.ParseInt() function. The fallback parameter
+// value is used when the parsing of the text content fails.
+func AssignInt(v *int64, base int, bitsize int, fallback int64) TextCallback {
+	return func(c CharData) {
+		val, err := strconv.ParseInt(string(c), base, bitsize)
+		if err == nil {
+			*v = val
+		} else {
+			*v = fallback
+		}
+	}
+}
+
+// AssignUInt is a helper function which returns a text callback that
+// assigns the text content of the current tag parsed as an uint to the
+// passed variable pointer. The accepted text values correspond to the
+// one accepted by the strconv.ParseUint() function. The fallback parameter
+// value is used when the parsing of the text content fails.
+func AssignUInt(v *uint64, base int, bitsize int, fallback uint64) TextCallback {
+	return func(c CharData) {
+		val, err := strconv.ParseUint(string(c), base, bitsize)
+		if err == nil {
+			*v = val
+		} else {
+			*v = fallback
+		}
+	}
+}
+
 // Append is a helper function which returns a text callback that appends
 // the text content of the current tag to the passed strings slice pointer.
 func Append(a *[]string) TextCallback {
 	return func(c CharData) {
 		*a = append(*a, string(c))
+	}
+}
+
+// AppendBool is a helper function which returns a text callback that appends
+// the text content of the current tag parsed as a bool to the passed slice
+// pointer. The accepted text values correspond to the one accepted by the
+// strconv.ParseBool() function. The fallback parameter value is used when
+// the parsing of the text content fails.
+func AppendBool(a *[]bool, fallback bool) TextCallback {
+	return func(c CharData) {
+		var val bool
+		AssignBool(&val, fallback)(c)
+		*a = append(*a, val)
+	}
+}
+
+// AppendFloat is a helper function which returns a text callback that appends
+// the text content of the current tag parsed as a float to the passed slice
+// pointer. The accepted text values correspond to the one accepted by the
+// strconv.ParseFloat() function. The fallback parameter value is used when
+// the parsing of the text content fails.
+func AppendFloat(a *[]float64, bitsize int, fallback float64) TextCallback {
+	return func(c CharData) {
+		var val float64
+		AssignFloat(&val, bitsize, fallback)(c)
+		*a = append(*a, val)
+	}
+}
+
+// AppendInt is a helper function which returns a text callback that appends
+// the text content of the current tag parsed as an int to the passed slice
+// pointer. The accepted text values correspond to the one accepted by the
+// strconv.ParseInt() function. The fallback parameter value is used when
+// the parsing of the text content fails.
+func AppendInt(a *[]int64, base int, bitsize int, fallback int64) TextCallback {
+	return func(c CharData) {
+		var val int64
+		AssignInt(&val, base, bitsize, fallback)(c)
+		*a = append(*a, val)
+	}
+}
+
+// AppendUInt is a helper function which returns a text callback that appends
+// the text content of the current tag parsed as an uint to the passed slice
+// pointer. The accepted text values correspond to the one accepted by the
+// strconv.ParseUint() function. The fallback parameter value is used when
+// the parsing of the text content fails.
+func AppendUInt(a *[]uint64, base int, bitsize int, fallback uint64) TextCallback {
+	return func(c CharData) {
+		var val uint64
+		AssignUInt(&val, base, bitsize, fallback)(c)
+		*a = append(*a, val)
 	}
 }
 

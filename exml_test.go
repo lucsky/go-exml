@@ -470,35 +470,89 @@ func runTextTest4(c *check.C, data string, expectedFmt string) {
 const ASSIGN = `<?xml version="1.0"?>
 <root>
     <node>Text content</node>
+    <bool>true</bool>
+    <bad-bool>foo</bad-bool>
+    <float>3.14</float>
+    <bad-float>foo</bad-float>
+    <int>-42</int>
+    <bad-int>foo</bad-int>
+    <uint>42</uint>
+    <bad-uint>foo</bad-uint>
 </root>`
 
 func (s *EXMLSuite) Test_Assign(c *check.C) {
 	var text string
+	var boolVal1 bool
+	var boolVal2 bool
+	var floatVal1 float64
+	var floatVal2 float64
+	var intVal1 int64
+	var intVal2 int64
+	var uintVal1 uint64
+	var uintVal2 uint64
 
 	decoder := NewDecoder(strings.NewReader(ASSIGN))
 	decoder.OnTextOf("root/node", Assign(&text))
+	decoder.OnTextOf("root/bool", AssignBool(&boolVal1, false))
+	decoder.OnTextOf("root/bad-bool", AssignBool(&boolVal2, true))
+	decoder.OnTextOf("root/float", AssignFloat(&floatVal1, 64, 0))
+	decoder.OnTextOf("root/bad-float", AssignFloat(&floatVal2, 64, 3.14))
+	decoder.OnTextOf("root/int", AssignInt(&intVal1, 10, 64, 0))
+	decoder.OnTextOf("root/bad-int", AssignInt(&intVal2, 10, 64, 42))
+	decoder.OnTextOf("root/uint", AssignUInt(&uintVal1, 10, 64, 0))
+	decoder.OnTextOf("root/bad-uint", AssignUInt(&uintVal2, 10, 64, 42))
 	decoder.Run()
 
 	c.Assert(text, check.Equals, "Text content")
+	c.Assert(boolVal1, check.Equals, true)
+	c.Assert(boolVal2, check.Equals, true)
+	c.Assert(floatVal1, check.Equals, 3.14)
+	c.Assert(floatVal2, check.Equals, 3.14)
+	c.Assert(intVal1, check.Equals, int64(-42))
+	c.Assert(intVal2, check.Equals, int64(42))
+	c.Assert(uintVal1, check.Equals, uint64(42))
+	c.Assert(uintVal2, check.Equals, uint64(42))
 }
 
 const APPEND = `<?xml version="1.0"?>
 <root>
-    <node>Text content 1</node>
-    <node>Text content 2</node>
-    <node>Text content 3</node>
+    <node>Text content 1</node><node>Text content 2</node><node>Text content 3</node>
+    <bool>true</bool><bool>1</bool><bool>foo</bool>
+    <float>3.14</float><float>-3.14</float><float>foo</float>
+    <int>-42</int><int>42</int><int>foo</int>
+    <uint>42</uint><uint>21</uint><uint>foo</uint>
 </root>`
 
 func (s *EXMLSuite) Test_Append(c *check.C) {
 	texts := []string{}
+	bools := []bool{}
+	floats := []float64{}
+	ints := []int64{}
+	uints := []uint64{}
 
 	decoder := NewDecoder(strings.NewReader(APPEND))
 	decoder.OnTextOf("root/node", Append(&texts))
+	decoder.OnTextOf("root/bool", AppendBool(&bools, false))
+	decoder.OnTextOf("root/float", AppendFloat(&floats, 64, 1.5))
+	decoder.OnTextOf("root/int", AppendInt(&ints, 10, 64, 21))
+	decoder.OnTextOf("root/uint", AppendUInt(&uints, 10, 64, 2))
 	decoder.Run()
 
 	c.Assert(texts[0], check.Equals, "Text content 1")
 	c.Assert(texts[1], check.Equals, "Text content 2")
 	c.Assert(texts[2], check.Equals, "Text content 3")
+	c.Assert(bools[0], check.Equals, true)
+	c.Assert(bools[1], check.Equals, true)
+	c.Assert(bools[2], check.Equals, false)
+	c.Assert(floats[0], check.Equals, 3.14)
+	c.Assert(floats[1], check.Equals, -3.14)
+	c.Assert(floats[2], check.Equals, 1.5)
+	c.Assert(ints[0], check.Equals, int64(-42))
+	c.Assert(ints[1], check.Equals, int64(42))
+	c.Assert(ints[2], check.Equals, int64(21))
+	c.Assert(uints[0], check.Equals, uint64(42))
+	c.Assert(uints[1], check.Equals, uint64(21))
+	c.Assert(uints[2], check.Equals, uint64(2))
 }
 
 const NESTED_TEXT = `<?xml version="1.0"?>

@@ -8,11 +8,11 @@ The **exml** package provides an intuitive event based XML parsing API which sit
 
 ```go get github.com/lucsky/go-exml```
 
-**v3:**
+**v3.1:**
 
 ```go get gopkg.in/lucsky/go-exml.v3```
 
-The third version of **exml** provides compile time callback safety at the cost of an **API CHANGE**. Ad hoc ```$text``` events have been replaced by the specific ```OnText``` and ```OnTextOf``` event registration methods.
+The third version of **exml** provides compile time callback safety at the cost of an **API CHANGE**. Ad hoc ```$text``` events have been replaced by the specific ```OnText``` and ```OnTextOf``` event registration methods. Typed shortcuts were introduced in v3.1, AssignT and AppendT.
 
 **v2:**
 
@@ -139,7 +139,7 @@ decoder.On("address-book/contact/address", func(attrs exml.Attrs) {
 })
 ```
 
-Finally, since using nodes text content to initialize struct fields is a pretty frequent task, **exml** provides a shortcut to make it shorter to write. Let's revisit our address book example and use this shortcut:
+Finally, since using nodes text content to initialize struct fields is a pretty frequent task, **exml** provides shortcuts to make it shorter to write. Let's revisit our address book example and use this shortcut:
 
 ```go
 contact := &Contact{}
@@ -148,7 +148,7 @@ decoder.OnTextOf("last-name", exml.Assign(&contact.LastName))
 decoder.OnTextOf("address", exml.Assign(&contact.Address))
 ```
 
-Another shortcut allows to accumulate text content from various nodes to a single slice:
+Other assignment shortcuts (AssignBool, AssignFloat, AssignInt and AssignUInt) allow to pick typed values. Another type of shortcuts allow to accumulate text content from various nodes to a single slice:
 
 ```go
 info := []string{}
@@ -156,6 +156,8 @@ decoder.OnTextOf("first-name", decoder.Append(&info))
 decoder.OnTextOf("last-name", decoder.Append(&info))
 decoder.OnTextOf("address", decoder.Append(&info))
 ```
+
+In the same way, there are typed versions of the appending shortcuts (AppendBool, AppendFloat, AppendInt and AppendUInt) which allow to append typed parsed values.
 
 The second version (aka v2) of **exml** introduced global events which allow to register a top level handler that would be picked up at any level whenever a corresponding XML node is encountered. For example, this snippet would allow to print all text nodes regardless of their depth and parent tag:
 
