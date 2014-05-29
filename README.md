@@ -8,11 +8,11 @@ The **exml** package provides an intuitive event based XML parsing API which sit
 
 ```go get github.com/lucsky/go-exml```
 
-**v3.1:**
+**v3.1.1:**
 
 ```go get gopkg.in/lucsky/go-exml.v3```
 
-The third version of **exml** provides compile time callback safety at the cost of an **API CHANGE**. Ad hoc ```$text``` events have been replaced by the specific ```OnText``` and ```OnTextOf``` event registration methods. Also new in v3.1: custom xml.Decoder support, type attribute readers, typed assignment/appending shortcuts (AssignT and AppendT) and full API documentation.
+The third version of **exml** provides compile time callback safety at the cost of an **API CHANGE**. Ad hoc ```$text``` events have been replaced by the specific ```OnText``` and ```OnTextOf``` event registration methods. Also new in v3.1: custom xml.Decoder support, type attribute readers, typed assignment/appending shortcuts (AssignT and AppendT) and full API documentation. v3.1.1 fixes a major bug causing the handlers stack to become inconsistent when ignoring tags.
 
 **v2:**
 
