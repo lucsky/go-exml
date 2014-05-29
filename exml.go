@@ -135,6 +135,9 @@ func (d *Decoder) handleTag(t xml.StartElement) {
 	h := d.topHandler.subHandlers[t.Name.Local]
 	if h == nil && d.currentHandler != d.topHandler {
 		h = d.currentHandler.subHandlers[t.Name.Local]
+		if h == nil {
+			h = &handler{}
+		}
 	}
 
 	if h != nil {

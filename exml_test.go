@@ -18,6 +18,7 @@ const EXAMPLE = `<?xml version="1.0"?>
         <first-name>Tim</first-name>
         <last-name>Cook</last-name>
         <address>Cupertino</address>
+        <zip>90210</zip>
     </contact>
     <contact>
         <first-name>Steve</first-name>
