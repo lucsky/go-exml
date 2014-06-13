@@ -587,6 +587,20 @@ func (s *EXMLSuite) Test_Error(c *check.C) {
 	c.Assert(handlerWasCalled, check.Equals, true)
 }
 
+func (s *EXMLSuite) Test_EmptyInput(c *check.C) {
+	decoder := NewDecoder(strings.NewReader(""))
+
+	handlerWasCalled := false
+
+	decoder.OnError(func(err error) {
+		handlerWasCalled = true
+	})
+
+	decoder.Run()
+
+	c.Assert(handlerWasCalled, check.Equals, false)
+}
+
 // ============================================================================
 // Benchmarks
 

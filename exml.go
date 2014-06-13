@@ -110,7 +110,7 @@ func (d *Decoder) Run() {
 	for {
 		token, err := d.decoder.Token()
 		if token == nil {
-			if d.errorCallback != nil {
+			if err != io.EOF && d.errorCallback != nil {
 				d.errorCallback(err)
 			}
 			break
