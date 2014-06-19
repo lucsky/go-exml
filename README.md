@@ -152,9 +152,9 @@ Other assignment shortcuts (AssignBool, AssignFloat, AssignInt and AssignUInt) a
 
 ```go
 info := []string{}
-decoder.OnTextOf("first-name", decoder.Append(&info))
-decoder.OnTextOf("last-name", decoder.Append(&info))
-decoder.OnTextOf("address", decoder.Append(&info))
+decoder.OnTextOf("first-name", exml.Append(&info))
+decoder.OnTextOf("last-name", exml.Append(&info))
+decoder.OnTextOf("address", exml.Append(&info))
 ```
 
 In the same way, there are typed versions of the appending shortcuts (AppendBool, AppendFloat, AppendInt and AppendUInt) which allow to append typed parsed values.
